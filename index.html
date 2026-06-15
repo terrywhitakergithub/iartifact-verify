@@ -175,7 +175,7 @@ header{width:100%;border-bottom:1px solid var(--ink);padding:18px 40px;
   <div class="hero-sub">Drop an iArtifact folder to independently verify its authenticity.</div>
 
   <div class="why-box">
-    <strong>Who is this for?</strong> If someone sent you an iArtifact — a piece of art, an NFT, a commissioned work, a certificate — this tool lets you independently confirm it is exactly what they say it is. You don't need an account. Nothing leaves your machine. The verification runs entirely in your browser using the same SHA-256 hashing the iArtifact app used to create the record.<br><br>
+    <strong>Who is this for?</strong> If someone sent you an iArtifact — a piece of music, visual art, writing, software, photography, film, a beat, a physical work, an NFT, a patent filing, a trademark, or any creative or professional record — this tool lets you independently confirm it is exactly what they say it is. You don't need an account. Nothing leaves your machine. Verification runs entirely in your browser using the same SHA-256 hashing the iArtifact app used when the record was created.<br><br>
     <strong>What does it prove?</strong> That every file is byte-for-byte identical to what was recorded at creation, that the provenance chain linking every event is mathematically intact, and that the RFC 3161 timestamp was signed by a trusted third party — not the creator.
   </div>
 
@@ -562,15 +562,34 @@ function renderReport(r) {
   }).join('');
 
   const a = r.artifact || {};
+  const SLOT_LABELS = {
+    'Music / Audio':           { edition:'Album / Release', blockchain:'Label / Publisher', contract:'Featured Artists', token_id:'ISRC Code', license:'Rights Type', royalty:'Distributor' },
+    'Beat / Sample':           { edition:'BPM', blockchain:'Genre / Tag', contract:'Stems Included', token_id:'Sample Clearance #', license:'License Type', royalty:'Key' },
+    'Written Work':            { edition:'Edition / Volume', blockchain:'Publisher', contract:'Word Count', token_id:'ISBN / ISSN', license:'Rights', royalty:'Format' },
+    'Photography':             { edition:'Print Edition', blockchain:'Model Release', contract:'Location', token_id:'Copyright Reg. #', license:'License', royalty:'Format / Size' },
+    'Film / Video':            { edition:'Runtime', blockchain:'Director / Studio', contract:'Cast', token_id:'Copyright Reg. #', tx_hash:'Distributor', license:'Rights' },
+    'Physical Artwork':        { edition:'Dimensions', blockchain:'Collection / Owner', contract:'Condition', license:'Insurance / Value', royalty:'Provenance', token_id:'Certificate / Reg.' },
+    'AI-Generated Work':       { edition:'Human Edit %', blockchain:'Output Format', contract:'Prompt / Seed', license:'License', royalty:'Platform' },
+    'Game / Interactive':      { edition:'Build / Version', blockchain:'Platform', contract:'Rating / Category', token_id:'Copyright Reg. #', license:'License', royalty:'Publisher' },
+    'Software / Source Code':  { edition:'Version', blockchain:'Language / Stack', token_id:'Copyright Reg. #', contract:'Repository / URL', license:'License', royalty:'Platform / Runtime' },
+    'Design / Patent':         { edition:'Filing Date', blockchain:'Jurisdiction', contract:'Claims', token_id:'Patent / Reg. #', license:'Status', royalty:'Attorney / Agent' },
+    'Trademark / Brand Asset': { edition:'Filing Date', blockchain:'Class(es)', contract:'Jurisdiction', token_id:'Reg. / Serial #', license:'Status', royalty:'Attorney / Agent' },
+    'Research / Document':     { edition:'Publication', blockchain:'Institution', contract:'Co-Authors', token_id:'DOI / ISSN', license:'License', royalty:'Peer Reviewed' },
+    '1/1 NFT':                 { edition:'Edition', blockchain:'Blockchain', contract:'Contract', token_id:'Token ID', tx_hash:'TX Hash', royalty:'Royalty', license:'License' },
+    'Open Edition':            { edition:'Edition', blockchain:'Blockchain', contract:'Contract', token_id:'Token ID', tx_hash:'TX Hash', royalty:'Royalty', license:'License' },
+  };
+  const labels = SLOT_LABELS[a.artifact_type] || { edition:'Edition', blockchain:'Blockchain', contract:'Contract', token_id:'Token ID', tx_hash:'TX Hash', royalty:'Royalty', license:'License' };
   const certFields = [
     ['Artifact Type', a.artifact_type],
-    ['Edition', a.edition],
-    ['Blockchain', a.blockchain],
-    ['Contract', a.contract],
-    ['Token ID', a.token_id],
-    ['TX Hash', a.tx_hash],
-    ['Royalty', a.royalty],
-    ['License', a.license],
+    ['Date Created',       a.cert_date],
+    ['Medium / Format',    a.cert_medium],
+    [labels.edition,       a.edition],
+    [labels.blockchain,    a.blockchain],
+    [labels.contract,      a.contract],
+    [labels.token_id,      a.token_id],
+    [labels.tx_hash || 'TX Hash', a.tx_hash],
+    [labels.royalty,       a.royalty],
+    [labels.license,       a.license],
   ].filter(([,v]) => v);
 
   const certGrid = certFields.map(([k,v]) =>
