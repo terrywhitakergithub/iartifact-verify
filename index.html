@@ -698,7 +698,8 @@ function renderReport(r) {
       </div>
       ${a.contract ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">Human Oversight Level</div><div class="ck-detail">${esc(a.contract)}</div></div></div>` : ''}
       ${a.edition ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">Human Contribution</div><div class="ck-detail">${esc(a.edition)}</div></div></div>` : ''}
-      ${a.phys_medium||a.royalty ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">AI Model / Tool</div><div class="ck-detail">${esc(a.phys_medium||a.royalty||'')}</div></div></div>` : ''}
+      ${a.royalty ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">EU AI Act Disclosure</div><div class="ck-detail">${esc(a.royalty)}</div></div></div>` : ''}
+      ${a.blockchain ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">Output Format</div><div class="ck-detail">${esc(a.blockchain)}</div></div></div>` : ''}
     </div>` : ''}
 
     ${(()=>{
@@ -794,6 +795,19 @@ function resetVerifier() {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+function resetCertMode() {
+  certFile = null; workFile = null;
+  certZone.querySelector('div:nth-child(3)').textContent = 'Drop certificate HTML';
+  workZone.querySelector('div:nth-child(3)').textContent = 'Drop your work file';
+  certZone.style.borderColor = 'var(--line)';
+  workZone.style.borderColor = 'var(--line)';
+  document.getElementById('cert-result').innerHTML = '';
+  document.getElementById('cert-verify-btn').style.display = 'none';
+  document.getElementById('cert-input').value = '';
+  document.getElementById('work-input').value = '';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 // ── Mode switching ─────────────────────────────────────────────────────────
 let currentMode = 'folder';
 function setMode(mode) {
@@ -880,11 +894,12 @@ async function verifyCertMode() {
     const buf = await workFile.arrayBuffer();
     const workHash = await sha256hex(buf);
 
-    // Verify cert HTML integrity against ia-provenance cert_sha256
+    // Fix #2: strip comment line AND script block before hashing (matches Rust injection order)
+    // Rust appends: "\n<!-- iArtifact Provenance Block -->\n<script...>...</script>"
     let certIntegrityHtml = '';
     if (prov && prov.cert_sha256) {
-      const certBytes = new TextEncoder().encode(certText.replace(/<script type="application\/json" id="ia-provenance">[\s\S]*?<\/script>/, ''));
-      const certHash = await sha256hex(certBytes);
+      const stripped = certText.replace(/\n?<!-- iArtifact Provenance Block -->\n<script type="application\/json" id="ia-provenance">[\s\S]*?<\/script>/, '');
+      const certHash = await sha256hex(new TextEncoder().encode(stripped));
       const certMatch = certHash === prov.cert_sha256;
       certIntegrityHtml = `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2)">
         <span style="color:${certMatch?'var(--green)':'var(--red)'};font-weight:700;flex-shrink:0">${certMatch?'✓':'✗'}</span>
@@ -902,14 +917,14 @@ async function verifyCertMode() {
       </div>`;
     }
 
-    // TSA timestamp row
+    // Fix #1: use correct keys — cert embeds "tsa_status" string and "tsa_token_b64"
     let tsaHtml = '';
-    if (prov && prov.cert_tsa_stamped_at) {
-      const hasTsr = !!(prov.cert_tsa_token_b64);
+    if (prov && prov.tsa_status) {
+      const hasTsr = !!(prov.tsa_token_b64);
       tsaHtml = `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2)">
         <span style="color:${hasTsr?'var(--green)':'var(--gold)'};font-weight:700;flex-shrink:0">${hasTsr?'✓':'—'}</span>
         <div><div style="font-size:11px;font-weight:700">Cert-Level RFC 3161 Timestamp</div>
-        <div style="font-size:10px;color:var(--pencil);font-style:italic">${hasTsr?'Timestamp token present · stamped at '+esc(prov.cert_tsa_stamped_at)+' · freetsa.org':'Timestamp recorded at '+esc(prov.cert_tsa_stamped_at)}</div></div></div>`;
+        <div style="font-size:10px;color:var(--pencil);font-style:italic">${esc(prov.tsa_status)}</div></div></div>`;
     }
 
     // Find matching entry in manifest
@@ -947,6 +962,7 @@ async function verifyCertMode() {
         <div style="padding:8px 16px">${certIntegrityHtml}${tsaHtml}${x509Html}</div>
       </div>` : ''}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+        <button onclick="resetCertMode()" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--ink);background:transparent;color:var(--ink);padding:10px 16px;cursor:pointer;text-transform:uppercase">verify another</button>
         <button onclick="shareResult('${esc(iaId)}')"style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">share verification link</button>
         <button onclick="checkRegistry('${esc(iaId)}')" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">check public registry</button>
       </div>`;
@@ -955,15 +971,19 @@ async function verifyCertMode() {
   }
 }
 
-// Handle ?ia= URL param
+// Handle ?ia= URL param — stay in folder mode, show a callout banner
 const urlIa = new URLSearchParams(location.search).get('ia');
 if (urlIa) {
-  setMode('cert');
-  document.getElementById('cert-result').innerHTML = `
-    <div style="border:1px solid var(--line);padding:14px 18px;font-size:13px;color:var(--pencil)">
-      <strong style="color:var(--ink)">iA-ID: ${esc(urlIa)}</strong><br><br>
-      To verify this artifact, drop the certificate HTML file in the left box and the work file in the right box, then click Verify Now.
-    </div>`;
+  const banner = document.createElement('div');
+  banner.style.cssText = 'width:100%;max-width:760px;border:2px solid var(--ink);padding:14px 20px;margin-bottom:16px;font-family:var(--font);font-size:13px;display:flex;align-items:center;gap:14px;background:var(--paper2)';
+  banner.innerHTML = `
+    <span style="font-size:20px;flex-shrink:0">◈</span>
+    <div style="flex:1">
+      <strong>Verify iA-${esc(urlIa)}</strong><br>
+      <span style="font-size:11px;color:var(--pencil)">Drop the iArtifact folder below to verify this artifact, or use Certificate + File mode for single-file verification.</span>
+    </div>
+    <button onclick="this.parentElement.remove()" style="font-family:var(--font);font-size:11px;border:1px solid var(--line);background:none;padding:4px 10px;cursor:pointer;flex-shrink:0">✕</button>`;
+  document.querySelector('.drop-wrap').before(banner);
 }
 </script>
 </body>
