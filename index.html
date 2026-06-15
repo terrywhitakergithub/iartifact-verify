@@ -570,17 +570,24 @@ async function verify(files) {
     const coverageNote   = totalCount > 0
       ? ` · ${stampedCount} of ${totalCount} file(s) stamped`
       : ` · ${tsrPaths.length} token(s)`;
-    const tsrBuf = await readBuf(tsrPaths[0]);
-    if (tsrBuf && tsrBuf.byteLength > 64) {
-      const isDer = new Uint8Array(tsrBuf)[0] === 0x30;
-      addCheck('RFC 3161 Timestamp',
-        isDer ? 'ok' : 'warn',
-        isDer
-          ? `DER structure valid · freetsa.org${coverageNote}`
-          : `Token(s) found but may be malformed${coverageNote}`
-      );
+    // Validate DER structure on every token, report any malformed ones
+    let validCount = 0, malformedNames = [];
+    for (const tsrPath of tsrPaths) {
+      const buf = await readBuf(tsrPath);
+      if (buf && buf.byteLength > 64 && new Uint8Array(buf)[0] === 0x30) {
+        validCount++;
+      } else {
+        malformedNames.push(tsrPath.split('/').pop());
+      }
+    }
+    if (malformedNames.length === 0) {
+      addCheck('RFC 3161 Timestamp', 'ok',
+        `${validCount} token(s) · all DER structure valid · freetsa.org${coverageNote}`);
+    } else if (validCount > 0) {
+      addCheck('RFC 3161 Timestamp', 'warn',
+        `${validCount} valid · ${malformedNames.length} malformed (${malformedNames.join(', ')})${coverageNote}`);
     } else {
-      addCheck('RFC 3161 Timestamp', 'warn', 'Token file found but appears empty');
+      addCheck('RFC 3161 Timestamp', 'warn', `All token(s) appear malformed${coverageNote}`);
     }
   } else {
     addCheck('RFC 3161 Timestamp', isSealed ? 'warn' : 'skip',
