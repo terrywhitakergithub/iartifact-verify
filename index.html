@@ -101,6 +101,10 @@ header{width:100%;border-bottom:1px solid var(--ink);padding:18px 40px;
 .ck-detail.bad{color:var(--red);font-style:normal;font-weight:700}
 .ck-detail.warn{color:var(--gold);font-style:normal}
 .ck-detail code{font-family:var(--font);font-size:10px;background:var(--paper2);padding:1px 4px;border:1px solid var(--line2)}
+.ck-sym{font-size:13px;flex-shrink:0;width:20px;margin-top:1px;display:inline-block}
+.ck-sym.ck-ok{color:var(--green)}
+.ck-sym.ck-fail{color:var(--red);font-weight:700}
+.ck-sym.ck-warn{color:var(--gold)}
 
 .chain-wrap{border:1px solid var(--line);margin-bottom:14px}
 .chain-head{padding:8px 16px;font-size:9px;font-weight:700;letter-spacing:.16em;
@@ -697,17 +701,23 @@ function renderReport(r) {
       ${a.phys_medium||a.royalty ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">AI Model / Tool</div><div class="ck-detail">${esc(a.phys_medium||a.royalty||'')}</div></div></div>` : ''}
     </div>` : ''}
 
-    <div class="checks" style="border-color:#aaa">
+    ${(()=>{
+      const chainChk = r.checks.find(c=>c.label==='Provenance Chain');
+      const tsrChk   = r.checks.find(c=>c.label==='RFC 3161 Timestamp');
+      const chainOk  = chainChk && chainChk.status==='ok';
+      const tsrOk    = tsrChk  && tsrChk.status==='ok';
+      const c2paSym  = (ok,miss) => ok ? `<span class="ck-sym ck-ok">✓</span>` : miss ? `<span class="ck-sym ck-warn">—</span>` : `<span class="ck-sym ck-fail">✗</span>`;
+      return `<div class="checks" style="border-color:#aaa">
       <div class="check-head">C2PA Provenance Claims</div>
       <div class="check-row">
-        <span class="ck-sym ck-ok">✓</span>
+        ${c2paSym(chainOk, !chainChk)}
         <div><div class="ck-label">Hash Chain Integrity</div>
-        <div class="ck-detail">SHA-256 hash chain verified — every event in the provenance record is mathematically linked and tamper-evident.</div></div>
+        <div class="ck-detail">${chainChk ? esc(chainChk.detail) : 'Chain not checked'}</div></div>
       </div>
       <div class="check-row">
-        <span class="ck-sym ck-ok">✓</span>
+        ${c2paSym(tsrOk, tsrChk && tsrChk.status==='skip')}
         <div><div class="ck-label">RFC 3161 Timestamp</div>
-        <div class="ck-detail">Cryptographic timestamp from FreeTSA — cannot be forged or backdated.</div></div>
+        <div class="ck-detail">${tsrChk ? esc(tsrChk.detail) : 'Timestamp not checked'}</div></div>
       </div>
       <div class="check-row">
         <span class="ck-sym ck-ok">✓</span>
@@ -719,7 +729,7 @@ function renderReport(r) {
         <div><div class="ck-label">C2PA Signing Authority</div>
         <div class="ck-detail">Ground Zero Studios iArtifact v1.1.0 — self-asserted provenance. Third-party CA signing: roadmap v2.0.</div></div>
       </div>
-    </div>
+    </div>`;})()}
 
     ${fileRows ? `<div class="file-list">
       <div class="fl-head"><span>Files</span><span>${(r.fileResults||[]).length} total</span></div>
@@ -849,38 +859,97 @@ async function verifyCertMode() {
   out.innerHTML = '<p style="color:var(--pencil)">Reading certificate…</p>';
   try {
     const certText = await certFile.text();
+
     // Parse iA-ID
     const iaMatch = certText.match(/iA-ID[:\s]+([a-f0-9]{12})/i);
     const iaId = iaMatch ? iaMatch[1] : 'unknown';
+
     // Parse embedded manifest JSON
     const manifestMatch = certText.match(/<script type="application\/json" id="ia-manifest">([\s\S]*?)<\/script>/);
     if (!manifestMatch) {
-      out.innerHTML = '<p style="color:var(--red)">✗ This certificate does not contain embedded file hashes. It may have been created before this feature was added.</p>'; return;
+      out.innerHTML = '<p style="color:var(--red)">✗ This certificate does not contain embedded file hashes. It may have been created before this feature was added, or it is not a valid iArtifact certificate.</p>'; return;
     }
     const manifest = JSON.parse(manifestMatch[1]);
+
+    // Parse ia-provenance block (cert-level TSA + X.509)
+    const provMatch = certText.match(/<script type="application\/json" id="ia-provenance">([\s\S]*?)<\/script>/);
+    let prov = null;
+    if (provMatch) { try { prov = JSON.parse(provMatch[1]); } catch(_) {} }
+
     // Hash the work file
     const buf = await workFile.arrayBuffer();
     const workHash = await sha256hex(buf);
-    // Find matching entry
+
+    // Verify cert HTML integrity against ia-provenance cert_sha256
+    let certIntegrityHtml = '';
+    if (prov && prov.cert_sha256) {
+      const certBytes = new TextEncoder().encode(certText.replace(/<script type="application\/json" id="ia-provenance">[\s\S]*?<\/script>/, ''));
+      const certHash = await sha256hex(certBytes);
+      const certMatch = certHash === prov.cert_sha256;
+      certIntegrityHtml = `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2)">
+        <span style="color:${certMatch?'var(--green)':'var(--red)'};font-weight:700;flex-shrink:0">${certMatch?'✓':'✗'}</span>
+        <div><div style="font-size:11px;font-weight:700">Certificate HTML Integrity</div>
+        <div style="font-size:10px;color:var(--pencil);font-style:italic">${certMatch?'Certificate HTML is unmodified since export':'Certificate HTML has been altered since export'}</div></div></div>`;
+    }
+
+    // X.509 fingerprint row
+    let x509Html = '';
+    if (prov && prov.x509_fingerprint) {
+      x509Html = `<div style="padding:8px 0;border-bottom:1px solid var(--line2)">
+        <div style="font-size:9px;font-weight:700;color:var(--pencil);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">X.509 Fingerprint (SHA-256)</div>
+        <div style="font-size:9px;font-family:monospace;color:var(--gold);word-break:break-all">${esc(prov.x509_fingerprint)}</div>
+        <div style="font-size:9px;color:var(--pencil);font-style:italic;margin-top:2px">Ground Zero Studios iArtifact Authority (self-signed CA)</div>
+      </div>`;
+    }
+
+    // TSA timestamp row
+    let tsaHtml = '';
+    if (prov && prov.cert_tsa_stamped_at) {
+      const hasTsr = !!(prov.cert_tsa_token_b64);
+      tsaHtml = `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2)">
+        <span style="color:${hasTsr?'var(--green)':'var(--gold)'};font-weight:700;flex-shrink:0">${hasTsr?'✓':'—'}</span>
+        <div><div style="font-size:11px;font-weight:700">Cert-Level RFC 3161 Timestamp</div>
+        <div style="font-size:10px;color:var(--pencil);font-style:italic">${hasTsr?'Timestamp token present · stamped at '+esc(prov.cert_tsa_stamped_at)+' · freetsa.org':'Timestamp recorded at '+esc(prov.cert_tsa_stamped_at)}</div></div></div>`;
+    }
+
+    // Find matching entry in manifest
     const workName = workFile.name;
     const match = manifest.find(e => e.path === workName || e.path.endsWith('/' + workName) || e.path.endsWith('\\' + workName));
-    let html = `<div style="border:2px solid var(--ink);padding:16px 20px;margin-bottom:12px">
-      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);margin-bottom:6px">Certificate iA-ID: ${esc(iaId)}</div>
-      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);margin-bottom:6px">File checked: ${esc(workName)}</div>`;
+
+    let fileVerifyHtml;
     if (!match) {
-      html += `<div style="color:var(--red);font-weight:700;font-size:14px">✗ File not found in certificate manifest</div>
+      fileVerifyHtml = `<div style="color:var(--red);font-weight:700;font-size:14px">✗ File not found in certificate manifest</div>
         <div style="font-size:12px;color:var(--pencil);margin-top:6px">The file "${esc(workName)}" was not recorded in this artifact. Check you have the right file.</div>`;
     } else if (match.sha256 === workHash) {
-      html += `<div style="color:var(--green);font-weight:700;font-size:16px">✓ File verified — hash matches</div>
+      fileVerifyHtml = `<div style="color:var(--green);font-weight:700;font-size:16px">✓ File verified — hash matches</div>
         <div style="font-size:12px;color:var(--pencil);margin-top:6px">This file is byte-for-byte identical to what was sealed in the certificate.</div>
         <div style="font-size:10px;font-family:monospace;color:var(--gold);margin-top:8px;word-break:break-all">SHA-256: ${esc(workHash)}</div>`;
     } else {
-      html += `<div style="color:var(--red);font-weight:700;font-size:16px">✗ Hash mismatch — file has been altered</div>
+      fileVerifyHtml = `<div style="color:var(--red);font-weight:700;font-size:16px">✗ Hash mismatch — file has been altered</div>
         <div style="font-size:12px;color:var(--pencil);margin-top:6px">The file does not match the sealed record. It has been modified since the certificate was created.</div>
         <div style="font-size:10px;font-family:monospace;color:var(--red);margin-top:8px;word-break:break-all">Expected: ${esc(match.sha256)}<br>Got: ${esc(workHash)}</div>`;
     }
-    html += '</div>';
-    out.innerHTML = html;
+
+    out.innerHTML = `
+      <div style="border:1px solid var(--line);margin-bottom:12px">
+        <div style="padding:8px 16px;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--pencil);border-bottom:1px solid var(--line2);background:var(--paper2);display:flex;justify-content:space-between">
+          <span>Certificate Verification</span>
+          <span style="color:var(--gold)">iA-${esc(iaId)}</span>
+        </div>
+        <div style="padding:12px 16px">
+          <div style="font-size:11px;color:var(--pencil);margin-bottom:10px">File: <strong style="color:var(--ink)">${esc(workName)}</strong></div>
+          ${fileVerifyHtml}
+        </div>
+      </div>
+      ${certIntegrityHtml || tsaHtml || x509Html ? `
+      <div style="border:1px solid var(--line);margin-bottom:12px">
+        <div style="padding:8px 16px;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--pencil);border-bottom:1px solid var(--line2);background:var(--paper2)">Provenance Details</div>
+        <div style="padding:8px 16px">${certIntegrityHtml}${tsaHtml}${x509Html}</div>
+      </div>` : ''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+        <button onclick="shareResult('${esc(iaId)}')"style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">share verification link</button>
+        <button onclick="checkRegistry('${esc(iaId)}')" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">check public registry</button>
+      </div>`;
   } catch(e) {
     out.innerHTML = `<p style="color:var(--red)">Error: ${esc(String(e))}</p>`;
   }
