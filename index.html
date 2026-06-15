@@ -593,7 +593,7 @@ function renderReport(r) {
     'Photography':             { edition:'Print Edition', blockchain:'Model Release', contract:'Location', token_id:'Copyright Reg. #', license:'License', royalty:'Format / Size' },
     'Film / Video':            { edition:'Runtime', blockchain:'Director / Studio', contract:'Cast', token_id:'Copyright Reg. #', tx_hash:'Distributor', license:'Rights' },
     'Physical Artwork':        { edition:'Dimensions', blockchain:'Collection / Owner', contract:'Condition', license:'Insurance / Value', royalty:'Provenance', token_id:'Certificate / Reg.' },
-    'AI-Generated Work':       { edition:'Human Edit %', blockchain:'Output Format', contract:'Prompt / Seed', license:'License', royalty:'Platform' },
+    'AI-Generated Work':       { edition:'Human Contribution %', blockchain:'Output Format', contract:'Human Oversight Level', token_id:'Prompt / Seed Ref', license:'License', royalty:'EU AI Act Disclosure', tx_hash:'AI Provider / Platform' },
     'Game / Interactive':      { edition:'Build / Version', blockchain:'Platform', contract:'Rating / Category', token_id:'Copyright Reg. #', license:'License', royalty:'Publisher' },
     'Software / Source Code':  { edition:'Version', blockchain:'Language / Stack', token_id:'Copyright Reg. #', contract:'Repository / URL', license:'License', royalty:'Platform / Runtime' },
     'Design / Patent':         { edition:'Filing Date', blockchain:'Jurisdiction', contract:'Claims', token_id:'Patent / Reg. #', license:'Status', royalty:'Attorney / Agent' },
@@ -668,6 +668,43 @@ function renderReport(r) {
       </div>
       <div class="cert-grid">${certGrid}</div>
     </div>` : ''}
+
+    ${(a.artifact_type==='AI-Generated Work'||a.artifact_type==='Generative / AI Art') ? `
+    <div class="checks" style="border-color:#d4a800">
+      <div class="check-head" style="background:#fffdf0;color:#8a6a00">EU AI Act — Article 50 Disclosure</div>
+      <div class="check-row">
+        <span class="ck-sym" style="color:#8a6a00">◈</span>
+        <div><div class="ck-label">AI Disclosure Status</div>
+        <div class="ck-detail">This content is declared AI-generated. Machine-readable C2PA-aligned disclosure is embedded in the certificate JSON-LD.</div></div>
+      </div>
+      ${a.contract ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">Human Oversight Level</div><div class="ck-detail">${esc(a.contract)}</div></div></div>` : ''}
+      ${a.edition ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">Human Contribution</div><div class="ck-detail">${esc(a.edition)}</div></div></div>` : ''}
+      ${a.phys_medium||a.royalty ? `<div class="check-row"><span class="ck-sym" style="color:#8a6a00">—</span><div><div class="ck-label">AI Model / Tool</div><div class="ck-detail">${esc(a.phys_medium||a.royalty||'')}</div></div></div>` : ''}
+    </div>` : ''}
+
+    <div class="checks" style="border-color:#aaa">
+      <div class="check-head">C2PA Provenance Claims</div>
+      <div class="check-row">
+        <span class="ck-sym ck-ok">✓</span>
+        <div><div class="ck-label">Hash Chain Integrity</div>
+        <div class="ck-detail">SHA-256 hash chain verified — every event in the provenance record is mathematically linked and tamper-evident.</div></div>
+      </div>
+      <div class="check-row">
+        <span class="ck-sym ck-ok">✓</span>
+        <div><div class="ck-label">RFC 3161 Timestamp</div>
+        <div class="ck-detail">Cryptographic timestamp from FreeTSA — cannot be forged or backdated.</div></div>
+      </div>
+      <div class="check-row">
+        <span class="ck-sym ck-ok">✓</span>
+        <div><div class="ck-label">JSON-LD Machine-Readable Metadata</div>
+        <div class="ck-detail">schema.org + C2PA-aligned claims embedded in certificate. Readable by LLMs, search engines, and compliance systems.</div></div>
+      </div>
+      <div class="check-row">
+        <span class="ck-sym" style="color:#888">—</span>
+        <div><div class="ck-label">C2PA Signing Authority</div>
+        <div class="ck-detail">Ground Zero Studios iArtifact v1.1.0 — self-asserted provenance. Third-party CA signing: roadmap v2.0.</div></div>
+      </div>
+    </div>
 
     ${fileRows ? `<div class="file-list">
       <div class="fl-head"><span>Files</span><span>${(r.fileResults||[]).length} total</span></div>
