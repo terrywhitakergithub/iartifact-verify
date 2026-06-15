@@ -15,6 +15,21 @@
 html,body{min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:16px;font-weight:600}
 body{display:flex;flex-direction:column;align-items:center;padding:0 0 60px}
 
+@media(max-width:600px){
+  header{padding:12px 16px!important;flex-wrap:wrap;gap:8px}
+  .h-right{display:none}
+  .hero{padding:24px 16px 16px!important}
+  .hero-title{font-size:24px!important}
+  .drop-wrap,.report-wrap,#report{padding:0 12px!important}
+  #drop-zone{padding:28px 16px!important}
+  .cert-grid{grid-template-columns:1fr!important}
+  .chain-entry{flex-wrap:wrap}
+  .fl-row{flex-wrap:wrap;gap:4px}
+  .checks,.file-list,.chain-wrap,.cert-wrap{font-size:13px}
+  .verdict{flex-direction:column;gap:8px}
+  .verd-glyph{font-size:20px!important}
+}
+
 header{width:100%;border-bottom:1px solid var(--ink);padding:18px 40px;
   display:flex;align-items:baseline;gap:14px;background:var(--paper)}
 .h-glyph{font-size:22px;font-weight:700}
@@ -719,11 +734,45 @@ function renderReport(r) {
       <strong>No data was uploaded. This ran entirely in your browser.</strong>
     </div>
 
-    <button id="reset-btn" onclick="resetVerifier()">verify another artifact</button>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <button id="reset-btn" onclick="resetVerifier()">verify another artifact</button>
+      ${r.iaId ? `<button onclick="shareResult('${esc(r.iaId)}')" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">share verification link</button>` : ''}
+      ${r.iaId ? `<button onclick="checkRegistry('${esc(r.iaId)}')" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">check public registry</button>` : ''}
+    </div>
   `;
 
   document.getElementById('how-section').style.display = '';
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function shareResult(iaId) {
+  const url = `${location.origin}${location.pathname}?ia=${iaId}`;
+  if (navigator.share) {
+    navigator.share({ title: 'iArtifact Verification', text: `Verified iA-${iaId}`, url });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => alert('Verification link copied to clipboard:\n' + url));
+  } else {
+    prompt('Copy this verification link:', url);
+  }
+}
+
+async function checkRegistry(iaId) {
+  const btn = event.target;
+  btn.textContent = 'checking...';
+  btn.disabled = true;
+  try {
+    const resp = await fetch(`https://iartifact-registry.YOUR_SUBDOMAIN.workers.dev/lookup?ia=${iaId}`);
+    const data = await resp.json();
+    if (data.found) {
+      alert(`Registry record found:\n\niA-ID: iA-${data.ia_id}\nName: ${data.name}\nOwner: ${data.owner}\nType: ${data.artifact_type}\nRegistered: ${data.registered_at}\nSealed: ${data.sealed ? 'Yes' : 'No'}\n\nThis iA-ID is confirmed in the public registry.`);
+    } else {
+      alert(`iA-ID not found in public registry.\n\nThis means the artifact was created before the registry was deployed, or the creator has not enabled public registry.\n\nThe mathematical verification above is still valid.`);
+    }
+  } catch(e) {
+    alert('Registry check unavailable (registry not yet deployed or network error).\n\nMath verification above is still valid.');
+  }
+  btn.textContent = 'check public registry';
+  btn.disabled = false;
 }
 
 function resetVerifier() {
