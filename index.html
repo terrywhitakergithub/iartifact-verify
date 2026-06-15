@@ -402,6 +402,33 @@ async function verify(files) {
     if (status === 'warn') overallWarn = true;
   }
 
+  // ── Check 0: X.509 Certificate ────────────────────────────────────────────
+  setProgress(7, 'looking for certificate…');
+  const certHtmlPath = Object.keys(byPath).find(p => {
+    const name = p.split('/').pop();
+    return name.startsWith('iArtifact-') && name.endsWith('.html');
+  });
+  let certProv = null;
+  let certHtmlFound = false;
+  if (certHtmlPath) {
+    const certHtmlText = await readText(certHtmlPath);
+    if (certHtmlText) {
+      certHtmlFound = true;
+      const provMatch = certHtmlText.match(/<script type="application\/json" id="ia-provenance">([\s\S]*?)<\/script>/);
+      if (provMatch) { try { certProv = JSON.parse(provMatch[1]); } catch(_) {} }
+    }
+  }
+  if (certHtmlFound && certProv && certProv.x509_fingerprint) {
+    addCheck('X.509 Certificate Authority',
+      'ok',
+      `Ground Zero Studios iArtifact Authority · Fingerprint: ${certProv.x509_fingerprint.slice(0,32)}…`
+    );
+  } else if (certHtmlFound) {
+    addCheck('X.509 Certificate Authority', 'warn', 'Certificate HTML found but X.509 fingerprint not embedded (may be older export)');
+  } else {
+    addCheck('X.509 Certificate Authority', 'skip', 'No exported certificate HTML found in folder (export cert from iArtifact app to activate)');
+  }
+
   // ── Check 1: Structure ────────────────────────────────────────────────────
   setProgress(10, 'checking artifact structure…');
   const hasArtifact = !!artifact;
@@ -568,7 +595,7 @@ async function verify(files) {
         ? 'Passed all critical checks. Some optional elements were missing.'
         : `All checks passed. This artifact is cryptographically intact.${isSealed ? ' The seal is valid.' : ''}`)
       : 'One or more critical checks failed. This artifact may have been tampered with.',
-    checks, fileResults, chainResults, artifact, iaId, isSealed, sealedAt,
+    checks, fileResults, chainResults, artifact, iaId, isSealed, sealedAt, certHtmlFound,
   }), 200);
 }
 
@@ -721,9 +748,13 @@ function renderReport(r) {
         <div class="ck-detail">${tsrChk ? esc(tsrChk.detail) : 'Timestamp not checked'}</div></div>
       </div>
       <div class="check-row">
-        <span class="ck-sym ck-ok">✓</span>
+        ${r.certHtmlFound
+          ? `<span class="ck-sym ck-ok">✓</span>`
+          : `<span class="ck-sym ck-warn">—</span>`}
         <div><div class="ck-label">JSON-LD Machine-Readable Metadata</div>
-        <div class="ck-detail">schema.org + C2PA-aligned claims embedded in certificate. Readable by LLMs, search engines, and compliance systems.</div></div>
+        <div class="ck-detail">${r.certHtmlFound
+          ? 'schema.org + C2PA-aligned claims embedded in certificate HTML. Readable by LLMs, search engines, and compliance systems.'
+          : 'Export a certificate from the iArtifact app to activate JSON-LD metadata and X.509 provenance details.'}</div></div>
       </div>
       <div class="check-row">
         <span class="ck-sym" style="color:#888">—</span>
@@ -871,6 +902,7 @@ setupDropZone(workZone, workInput, setWorkFile);
 async function verifyCertMode() {
   const out = document.getElementById('cert-result');
   out.innerHTML = '<p style="color:var(--pencil)">Reading certificate…</p>';
+  document.getElementById('how-section').style.display = 'none';
   try {
     const certText = await certFile.text();
 
