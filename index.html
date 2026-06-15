@@ -419,9 +419,16 @@ async function verify(files) {
     }
   }
   if (certHtmlFound && certProv && certProv.x509_fingerprint) {
+    // Also count embedded TSR tokens
+    let tsrCount = 0;
+    if (certHtmlPath) {
+      const cHtml = await readText(certHtmlPath);
+      const tsrMatch = cHtml && cHtml.match(/<script type="application\/json" id="ia-tsr-tokens">([\s\S]*?)<\/script>/);
+      if (tsrMatch) { try { const arr = JSON.parse(tsrMatch[1]); tsrCount = Array.isArray(arr) ? arr.length : 0; } catch(_) {} }
+    }
     addCheck('X.509 Certificate Authority',
       'ok',
-      `Ground Zero Studios iArtifact Authority · Fingerprint: ${certProv.x509_fingerprint.slice(0,32)}…`
+      `Ground Zero Studios iArtifact Authority · Fingerprint: ${certProv.x509_fingerprint.slice(0,32)}…${tsrCount ? ` · ${tsrCount} RFC 3161 token(s) embedded` : ''}`
     );
   } else if (certHtmlFound) {
     addCheck('X.509 Certificate Authority', 'warn', 'Certificate HTML found but X.509 fingerprint not embedded (may be older export)');
@@ -757,9 +764,13 @@ function renderReport(r) {
           : 'Export a certificate from the iArtifact app to activate JSON-LD metadata and X.509 provenance details.'}</div></div>
       </div>
       <div class="check-row">
-        <span class="ck-sym" style="color:#888">—</span>
+        ${r.certHtmlFound
+          ? `<span class="ck-sym ck-ok">✓</span>`
+          : `<span class="ck-sym" style="color:#888">—</span>`}
         <div><div class="ck-label">C2PA Signing Authority</div>
-        <div class="ck-detail">Ground Zero Studios iArtifact v1.1.0 — self-asserted provenance. Third-party CA signing: roadmap v2.0.</div></div>
+        <div class="ck-detail">${r.certHtmlFound
+          ? 'Ground Zero Studios iArtifact v1.2.0 — X.509 self-signed CA per export. Fingerprint in certificate ia-provenance block.'
+          : 'Ground Zero Studios iArtifact v1.2.0 — X.509 CA active on exported certificates. Export cert to activate.'}</div></div>
       </div>
     </div>`;})()}
 
