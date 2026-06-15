@@ -188,14 +188,38 @@ header{width:100%;border-bottom:1px solid var(--ink);padding:18px 40px;
   </div>
 </div>
 
+<div style="display:flex;gap:12px;max-width:760px;margin:0 auto 12px;font-family:var(--font)">
+  <button id="mode-folder" onclick="setMode('folder')" style="flex:1;padding:10px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.08em;border:2px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer">▤ FULL FOLDER VERIFY</button>
+  <button id="mode-cert" onclick="setMode('cert')" style="flex:1;padding:10px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.08em;border:2px solid var(--ink);background:none;color:var(--ink);cursor:pointer">◈ CERTIFICATE + FILE VERIFY</button>
+</div>
+
 <div class="drop-wrap">
   <div id="drop-zone">
     <input type="file" id="dir-input" webkitdirectory multiple accept="">
     <div class="dz-icon">◈</div>
-    <div class="dz-title">Drop an iArtifact folder here</div>
-    <div class="dz-sub">or click to browse · works with any artifact made by iArtifact</div>
+    <div id="dz-title" class="dz-title">Drop an iArtifact folder here</div>
+    <div id="dz-sub" class="dz-sub">or click to browse · works with any artifact made by iArtifact</div>
     <div class="dz-note">your files never leave your device · runs entirely in the browser</div>
   </div>
+</div>
+
+<div id="cert-drop-wrap" style="display:none;max-width:760px;margin:0 auto">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div id="cert-zone" style="border:2px dashed var(--line);padding:28px 16px;text-align:center;cursor:pointer;font-family:var(--font)">
+      <input type="file" id="cert-input" accept=".html" style="display:none">
+      <div style="font-size:22px;margin-bottom:8px">◈</div>
+      <div style="font-size:13px;font-weight:700">Drop certificate HTML</div>
+      <div style="font-size:11px;color:var(--pencil);margin-top:4px">the iArtifact-XXXXXX.html file</div>
+    </div>
+    <div id="work-zone" style="border:2px dashed var(--line);padding:28px 16px;text-align:center;cursor:pointer;font-family:var(--font)">
+      <input type="file" id="work-input" style="display:none">
+      <div style="font-size:22px;margin-bottom:8px">⬛</div>
+      <div style="font-size:13px;font-weight:700">Drop your work file</div>
+      <div style="font-size:11px;color:var(--pencil);margin-top:4px">the image, PDF, audio, video, etc.</div>
+    </div>
+  </div>
+  <button id="cert-verify-btn" onclick="verifyCertMode()" style="display:none;width:100%;margin-top:12px;padding:12px;font-family:var(--font);font-size:13px;font-weight:700;letter-spacing:.1em;border:2px solid var(--ink);background:var(--ink);color:var(--paper);cursor:pointer">VERIFY NOW</button>
+  <div id="cert-result" style="margin-top:16px;font-family:var(--font);font-size:13px"></div>
 </div>
 
 <div id="progress-wrap">
@@ -672,6 +696,119 @@ function resetVerifier() {
   document.getElementById('dir-input').value = '';
   dz.classList.remove('processing','hover');
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── Mode switching ─────────────────────────────────────────────────────────
+let currentMode = 'folder';
+function setMode(mode) {
+  currentMode = mode;
+  const folderBtn = document.getElementById('mode-folder');
+  const certBtn   = document.getElementById('mode-cert');
+  const dzWrap    = document.querySelector('.drop-wrap');
+  const certWrap  = document.getElementById('cert-drop-wrap');
+  if (mode === 'folder') {
+    folderBtn.style.background = 'var(--ink)'; folderBtn.style.color = 'var(--paper)';
+    certBtn.style.background = 'none'; certBtn.style.color = 'var(--ink)';
+    dzWrap.style.display = ''; certWrap.style.display = 'none';
+    document.getElementById('dz-title').textContent = 'Drop an iArtifact folder here';
+    document.getElementById('dz-sub').textContent = 'or click to browse · works with any artifact made by iArtifact';
+  } else {
+    certBtn.style.background = 'var(--ink)'; certBtn.style.color = 'var(--paper)';
+    folderBtn.style.background = 'none'; folderBtn.style.color = 'var(--ink)';
+    dzWrap.style.display = 'none'; certWrap.style.display = '';
+  }
+}
+
+// ── Certificate + single file verification ─────────────────────────────────
+let certFile = null, workFile = null;
+
+const certZone = document.getElementById('cert-zone');
+const workZone = document.getElementById('work-zone');
+const certInput = document.getElementById('cert-input');
+const workInput = document.getElementById('work-input');
+
+function setupDropZone(zone, input, onFile) {
+  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--ink)'; });
+  zone.addEventListener('dragleave', () => { zone.style.borderColor = 'var(--line)'; });
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.style.borderColor = 'var(--line)';
+    const f = e.dataTransfer.files[0];
+    if (f) onFile(f);
+  });
+  input.addEventListener('change', () => { if (input.files[0]) onFile(input.files[0]); });
+}
+
+function setCertFile(f) {
+  certFile = f;
+  certZone.querySelector('div:nth-child(3)').textContent = f.name;
+  certZone.style.borderColor = 'var(--ink)';
+  checkBothReady();
+}
+function setWorkFile(f) {
+  workFile = f;
+  workZone.querySelector('div:nth-child(3)').textContent = f.name;
+  workZone.style.borderColor = 'var(--ink)';
+  checkBothReady();
+}
+function checkBothReady() {
+  document.getElementById('cert-verify-btn').style.display = (certFile && workFile) ? '' : 'none';
+}
+
+setupDropZone(certZone, certInput, setCertFile);
+setupDropZone(workZone, workInput, setWorkFile);
+
+async function verifyCertMode() {
+  const out = document.getElementById('cert-result');
+  out.innerHTML = '<p style="color:var(--pencil)">Reading certificate…</p>';
+  try {
+    const certText = await certFile.text();
+    // Parse iA-ID
+    const iaMatch = certText.match(/iA-ID[:\s]+([a-f0-9]{12})/i);
+    const iaId = iaMatch ? iaMatch[1] : 'unknown';
+    // Parse embedded manifest JSON
+    const manifestMatch = certText.match(/<script type="application\/json" id="ia-manifest">([\s\S]*?)<\/script>/);
+    if (!manifestMatch) {
+      out.innerHTML = '<p style="color:var(--red)">✗ This certificate does not contain embedded file hashes. It may have been created before this feature was added.</p>'; return;
+    }
+    const manifest = JSON.parse(manifestMatch[1]);
+    // Hash the work file
+    const buf = await workFile.arrayBuffer();
+    const workHash = await sha256hex(buf);
+    // Find matching entry
+    const workName = workFile.name;
+    const match = manifest.find(e => e.path === workName || e.path.endsWith('/' + workName) || e.path.endsWith('\\' + workName));
+    let html = `<div style="border:2px solid var(--ink);padding:16px 20px;margin-bottom:12px">
+      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);margin-bottom:6px">Certificate iA-ID: ${esc(iaId)}</div>
+      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);margin-bottom:6px">File checked: ${esc(workName)}</div>`;
+    if (!match) {
+      html += `<div style="color:var(--red);font-weight:700;font-size:14px">✗ File not found in certificate manifest</div>
+        <div style="font-size:12px;color:var(--pencil);margin-top:6px">The file "${esc(workName)}" was not recorded in this artifact. Check you have the right file.</div>`;
+    } else if (match.sha256 === workHash) {
+      html += `<div style="color:var(--green);font-weight:700;font-size:16px">✓ File verified — hash matches</div>
+        <div style="font-size:12px;color:var(--pencil);margin-top:6px">This file is byte-for-byte identical to what was sealed in the certificate.</div>
+        <div style="font-size:10px;font-family:monospace;color:var(--gold);margin-top:8px;word-break:break-all">SHA-256: ${esc(workHash)}</div>`;
+    } else {
+      html += `<div style="color:var(--red);font-weight:700;font-size:16px">✗ Hash mismatch — file has been altered</div>
+        <div style="font-size:12px;color:var(--pencil);margin-top:6px">The file does not match the sealed record. It has been modified since the certificate was created.</div>
+        <div style="font-size:10px;font-family:monospace;color:var(--red);margin-top:8px;word-break:break-all">Expected: ${esc(match.sha256)}<br>Got: ${esc(workHash)}</div>`;
+    }
+    html += '</div>';
+    out.innerHTML = html;
+  } catch(e) {
+    out.innerHTML = `<p style="color:var(--red)">Error: ${esc(String(e))}</p>`;
+  }
+}
+
+// Handle ?ia= URL param
+const urlIa = new URLSearchParams(location.search).get('ia');
+if (urlIa) {
+  setMode('cert');
+  document.getElementById('cert-result').innerHTML = `
+    <div style="border:1px solid var(--line);padding:14px 18px;font-size:13px;color:var(--pencil)">
+      <strong style="color:var(--ink)">iA-ID: ${esc(urlIa)}</strong><br><br>
+      To verify this artifact, drop the certificate HTML file in the left box and the work file in the right box, then click Verify Now.
+    </div>`;
 }
 </script>
 </body>
