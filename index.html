@@ -305,6 +305,7 @@ function showFound(d, el) {
     ? new Date(d.registered_at).toLocaleString(undefined, { dateStyle:'medium', timeStyle:'short' })
     : '';
 
+  el.style.display = 'block';
   el.innerHTML = `
     <div class="verdict">
       <div class="verdict-icon">✅</div>
@@ -336,7 +337,7 @@ function showFound(d, el) {
     </div>
     ${chainBlock}
   `;
-  el.style.display = '';
+  el.style.display = 'block';
 }
 
 function showNotFound(ia_id, el) {
@@ -356,7 +357,7 @@ function showNotFound(ia_id, el) {
       </div>
     </div>
   `;
-  el.style.display = '';
+  el.style.display = 'block';
 }
 
 function esc(s) {
