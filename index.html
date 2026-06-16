@@ -1267,6 +1267,48 @@ function _downloadCertReceiptImpl({ iaId, workName, fileOk, certOk, algo }) {
   URL.revokeObjectURL(url);
 }
 
+// Extract the manifest JSON embedded in a certificate and download it as a
+// recovery starting point. If the user has lost their artifact folder but
+// still has the HTML certificate, this gives them the full file list + hashes
+// so they know exactly which files to recover and can verify them once found.
+function downloadCertManifest() {
+  if (!lastCertReceipt) { toast('No certificate loaded'); return; }
+  const certEl = document.querySelector('input[type="file"]');
+  // Re-read from the stored cert HTML if available
+  const certHtml = window._lastCertHtml;
+  if (!certHtml) { toast('Certificate HTML not available — re-run verification first'); return; }
+
+  const manifestMatch = certHtml.match(/<script[^>]*id="ia-manifest"[^>]*>([\s\S]*?)<\/script>/);
+  const provMatch     = certHtml.match(/<script[^>]*id="ia-provenance"[^>]*>([\s\S]*?)<\/script>/);
+
+  let manifest = null;
+  try { manifest = manifestMatch ? JSON.parse(manifestMatch[1]) : null; } catch(e) {}
+  let provenance = null;
+  try { provenance = provMatch ? JSON.parse(provMatch[1]) : null; } catch(e) {}
+
+  if (!manifest && !provenance) {
+    toast('No manifest data found in this certificate (pre-v1.2.0 cert?)');
+    return;
+  }
+
+  const bundle = {
+    schema:       'iArtifact-CertManifestExtract/1.0',
+    extracted_at: new Date().toISOString(),
+    ia_id:        lastCertReceipt.iaId ? 'iA-' + lastCertReceipt.iaId : null,
+    note:         'Extracted from certificate HTML. File hashes are SHA-384. Recover each file, place it at its rel_path, and verify with the iArtifact app.',
+    provenance,
+    manifest,
+  };
+
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `iArtifact-manifest-extract-${lastCertReceipt.iaId || 'unknown'}-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function shareResult(iaId) {
   if (location.protocol === 'file:') {
     const r = lastReport;
@@ -1450,6 +1492,7 @@ async function verifyCertMode() {
   document.getElementById('how-section').style.display = 'none';
   try {
     const certText = await certFile.text();
+    window._lastCertHtml = certText; // stored for downloadCertManifest()
 
     // Parse iA-ID
     const iaMatch = certText.match(/iA-ID[:\s]+([a-f0-9]{12})(?![a-f0-9])/i);
@@ -1559,6 +1602,7 @@ async function verifyCertMode() {
         <button onclick="resetCertMode()" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--ink);background:transparent;color:var(--ink);padding:10px 16px;cursor:pointer;text-transform:uppercase">verify another</button>
         <button onclick="shareResult('${escJs(iaId)}')" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">share verification link</button>
         <button onclick="downloadCertReceipt()" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">⬇ download receipt</button>
+        <button onclick="downloadCertManifest()" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer" title="Download the file manifest embedded in this certificate — use as a starting point to rebuild a lost artifact folder">⬇ manifest (recovery)</button>
         <button onclick="window.print()" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">⎙ print</button>
         ${new URLSearchParams(location.search).get('registry') ? `<button onclick="checkRegistry('${escJs(iaId)}',this)" style="font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.1em;border:1px solid var(--line);background:var(--paper2);padding:10px 16px;cursor:pointer">check public registry</button>` : ''}
       </div>`;
