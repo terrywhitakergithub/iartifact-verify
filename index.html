@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iArtifact Verifier — Provenance Check</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0e0e0f;
+    --paper:   #16161a;
+    --paper2:  #1e1e24;
+    --border:  #2a2a35;
+    --ink:     #e8e8ec;
+    --ink2:    #9494a8;
+    --ink3:    #5a5a72;
+    --gold:    #c9a84c;
+    --green:   #22c55e;
+    --red:     #ef4444;
+    --amber:   #d97706;
+    --radius:  10px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .wordmark {
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: var(--ink3);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    width: 100%;
+    max-width: 620px;
+    margin-bottom: 20px;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+  }
+  input[type="text"] {
+    flex: 1;
+    background: var(--paper2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--ink);
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: var(--gold); }
+  input[type="text"]::placeholder { color: var(--ink3); }
+
+  button {
+    background: var(--gold);
+    border: none;
+    border-radius: 6px;
+    color: #0e0e0f;
+    cursor: pointer;
+    font-family: 'Georgia', serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 20px;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  button:hover { opacity: 0.88; }
+  button:disabled { opacity: 0.4; cursor: default; }
+
+  #status {
+    font-size: 12px;
+    color: var(--ink3);
+    text-align: center;
+    margin-top: 12px;
+    min-height: 18px;
+    font-style: italic;
+  }
+
+  /* Result card */
+  #result { display: none; }
+
+  .verdict {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 22px;
+  }
+  .verdict-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+  .verdict-text { flex: 1; }
+  .verdict-label {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .verdict-sub {
+    font-size: 11px;
+    color: var(--ink3);
+    font-style: italic;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 10px 16px;
+    font-size: 12px;
+  }
+  .field-label {
+    color: var(--ink3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 10px;
+    padding-top: 2px;
+  }
+  .field-value {
+    color: var(--ink);
+    word-break: break-all;
+  }
+  .field-value.mono {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--ink2);
+  }
+  .field-value.sealed {
+    color: var(--red);
+    font-weight: 700;
+  }
+  .field-value.not-found {
+    color: var(--amber);
+  }
+
+  .chain-hash {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--ink3);
+  }
+  .chain-hash span {
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: var(--ink3);
+    margin-top: 4px;
+    word-break: break-all;
+  }
+
+  .not-found-card { text-align: center; padding: 32px; }
+  .not-found-card .nf-icon { font-size: 36px; margin-bottom: 12px; }
+  .not-found-card .nf-title { font-size: 15px; color: var(--amber); margin-bottom: 8px; }
+  .not-found-card .nf-body { font-size: 12px; color: var(--ink3); line-height: 1.7; }
+
+  footer {
+    font-size: 10px;
+    color: var(--ink3);
+    text-align: center;
+    margin-top: 32px;
+    line-height: 1.8;
+  }
+  footer a { color: var(--ink3); text-decoration: none; }
+  footer a:hover { color: var(--gold); }
+
+  .pulse { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">iArtifact</div>
+  <h1>Provenance Verifier</h1>
+  <p class="subtitle">Enter an iA-ID to check authenticity against the public registry</p>
+</header>
+
+<div class="card">
+  <div class="search-row">
+    <input type="text" id="ia-input" placeholder="iA-ID (e.g. 3a7f2c1b9e04…)" autocomplete="off" spellcheck="false">
+    <button id="verify-btn" onclick="verify()">Verify</button>
+  </div>
+  <div id="status"></div>
+</div>
+
+<div class="card" id="result"></div>
+
+<footer>
+  Powered by <strong style="color:var(--gold)">iArtifact</strong> &nbsp;·&nbsp;
+  Registry: <a href="https://iartifact-registry.iartifact.workers.dev/health" target="_blank">iartifact.workers.dev</a>
+  &nbsp;·&nbsp; <a href="https://iartifact.io" target="_blank">iartifact.io</a>
+</footer>
+
+<script>
+const REGISTRY = 'https://iartifact-registry.iartifact.workers.dev';
+
+// Auto-read ?ia= from URL on page load (QR codes land here)
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const ia = params.get('ia') || params.get('id') || '';
+  if (ia) {
+    document.getElementById('ia-input').value = ia.trim();
+    verify();
+  }
+  document.getElementById('ia-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') verify();
+  });
+});
+
+async function verify() {
+  const input = document.getElementById('ia-input').value.trim();
+  const status = document.getElementById('status');
+  const result = document.getElementById('result');
+  const btn = document.getElementById('verify-btn');
+
+  if (!input) { status.textContent = 'Enter an iA-ID to verify.'; return; }
+
+  // Basic format check — hex, 12–64 chars
+  if (!/^[0-9a-f]{12,64}$/i.test(input)) {
+    status.textContent = 'iA-IDs are hex strings (0-9, a-f), 12–64 characters.';
+    result.style.display = 'none';
+    return;
+  }
+
+  btn.disabled = true;
+  status.innerHTML = '<span class="pulse">Checking registry…</span>';
+  result.style.display = 'none';
+
+  try {
+    const resp = await fetch(`${REGISTRY}/lookup?ia=${encodeURIComponent(input.toLowerCase())}`);
+    const data = await resp.json();
+
+    if (resp.status === 404 || !data.found) {
+      showNotFound(input, result);
+    } else {
+      showFound(data, result);
+    }
+    status.textContent = '';
+  } catch (err) {
+    status.textContent = 'Registry unreachable — check your connection and try again.';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function showFound(d, el) {
+  const sealed = d.sealed ? true : false;
+  const sealedLabel = sealed
+    ? '<span class="field-value sealed">■ Permanently sealed</span>'
+    : '<span class="field-value not-found">○ Not sealed</span>';
+
+  const chainBlock = d.chain_hash
+    ? `<div class="chain-hash">Chain hash (last entry):<span>${esc(d.chain_hash)}</span></div>`
+    : '';
+
+  const tsaBlock = d.tsa_cert_hash
+    ? `<div class="field-label">TSA cert hash</div><div class="field-value mono">${esc(d.tsa_cert_hash)}</div>`
+    : '';
+
+  const typeRow = d.artifact_type && d.artifact_type !== 'Unknown'
+    ? `<div class="field-label">Type</div><div class="field-value">${esc(d.artifact_type)}</div>`
+    : '';
+
+  const certRow = d.cert_date
+    ? `<div class="field-label">Cert date</div><div class="field-value">${esc(d.cert_date)}</div>`
+    : '';
+
+  const regAt = d.registered_at
+    ? new Date(d.registered_at).toLocaleString(undefined, { dateStyle:'medium', timeStyle:'short' })
+    : '';
+
+  el.innerHTML = `
+    <div class="verdict">
+      <div class="verdict-icon">✅</div>
+      <div class="verdict-text">
+        <div class="verdict-label" style="color:var(--green)">Record found in public registry</div>
+        <div class="verdict-sub">This iA-ID is registered and verifiable.</div>
+      </div>
+    </div>
+    <div class="field-grid">
+      <div class="field-label">iA-ID</div>
+      <div class="field-value mono">${esc(d.ia_id)}</div>
+
+      <div class="field-label">Name</div>
+      <div class="field-value">${esc(d.name)}</div>
+
+      <div class="field-label">Owner</div>
+      <div class="field-value">${esc(d.owner)}</div>
+
+      ${typeRow}
+      ${certRow}
+
+      <div class="field-label">Status</div>
+      ${sealedLabel}
+
+      <div class="field-label">Registered</div>
+      <div class="field-value">${esc(regAt)}</div>
+
+      ${tsaBlock}
+    </div>
+    ${chainBlock}
+  `;
+  el.style.display = '';
+}
+
+function showNotFound(ia_id, el) {
+  el.innerHTML = `
+    <div class="not-found-card">
+      <div class="nf-icon">⚠️</div>
+      <div class="nf-title">iA-ID not found in public registry</div>
+      <div class="nf-body">
+        <strong style="color:var(--ink2)">${esc(ia_id)}</strong><br><br>
+        This iA-ID has no entry in the public registry. This could mean:<br>
+        · The artifact was created but not yet registered<br>
+        · The iA-ID was entered incorrectly<br>
+        · The artifact was created offline without registry access<br><br>
+        The absence of a registry entry does not by itself prove a work is inauthentic —
+        it means the author has not published the record publicly.
+        Request the iArtifact certificate file directly from the creator for offline verification.
+      </div>
+    </div>
+  `;
+  el.style.display = '';
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
