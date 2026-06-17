@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>iArtifact Verifier — Provenance Check</title>
+<!-- AI training opt-out — EU DSM Directive 2019/790 Art. 4 TDM reservation -->
+<meta name="robots" content="noai, noimageai">
+<meta name="tdm-reservation" content="1">
+<meta name="ai-training" content="prohibited">
+<meta name="copyright" content="© 2024–2026 Ground Zero Studios. All rights reserved.">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -222,12 +227,13 @@
 <div class="card" id="result"></div>
 
 <footer>
-  Powered by <strong style="color:var(--gold)">iArtifact</strong> &nbsp;·&nbsp;
-  Registry: <a href="https://iartifact-registry.iartifact.workers.dev/health" target="_blank">iartifact.workers.dev</a>
-  &nbsp;·&nbsp; <a href="https://iartifact.io" target="_blank">iartifact.io</a>
+  <strong style="color:var(--gold)">iArtifact</strong> &nbsp;·&nbsp; a <a href="mailto:thareapa85@gmail.com">Ground Zero Studios</a> product<br>
+  <span style="font-size:11px;opacity:0.6">© 2024–2026 Ground Zero Studios. All rights reserved.</span>
 </footer>
 
 <script>
+// Update this to your Cloudflare Worker URL once deployed.
+// Leave empty string to run in offline/local-only mode.
 const REGISTRY = 'https://iartifact-registry.iartifact.workers.dev';
 
 // Auto-read ?ia= from URL on page load (QR codes land here)

@@ -1,0 +1,101 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:iartifact-v2.0.0-sbom",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-06-17T00:00:00Z",
+    "tools": [{ "vendor": "Ground Zero Studios", "name": "iArtifact", "version": "2.0.0" }],
+    "component": {
+      "type": "application",
+      "name": "iArtifact",
+      "version": "2.0.0",
+      "description": "Cryptographic provenance and authorship tool for digital creators",
+      "supplier": { "name": "Ground Zero Studios", "contact": [{ "email": "thareapa85@gmail.com" }] },
+      "licenses": [{ "license": { "name": "Proprietary" } }],
+      "purl": "pkg:generic/iartifact@2.0.0"
+    },
+    "manufacture": { "name": "Ground Zero Studios", "contact": [{ "email": "thareapa85@gmail.com" }] },
+    "manufacture-note": "CRA Regulation (EU) 2024/2847 — SBOM published ahead of December 2027 enforcement"
+  },
+  "components": [
+    {
+      "type": "library", "name": "tauri", "version": "2.x",
+      "purl": "pkg:cargo/tauri@2",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "Desktop application framework (Rust + WebView)"
+    },
+    {
+      "type": "library", "name": "reqwest", "version": "0.12.x",
+      "purl": "pkg:cargo/reqwest@0.12",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "HTTP client — used for RFC 3161 TSA requests and version checks"
+    },
+    {
+      "type": "library", "name": "sha2", "version": "0.10.x",
+      "purl": "pkg:cargo/sha2@0.10",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "SHA-384 hashing — BSI TR-02102-1 2024 compliant"
+    },
+    {
+      "type": "library", "name": "rcgen", "version": "0.x",
+      "purl": "pkg:cargo/rcgen",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "X.509 self-signed CA generation"
+    },
+    {
+      "type": "library", "name": "serde", "version": "1.x",
+      "purl": "pkg:cargo/serde@1",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "Serialization framework"
+    },
+    {
+      "type": "library", "name": "serde_json", "version": "1.x",
+      "purl": "pkg:cargo/serde_json@1",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "JSON serialization"
+    },
+    {
+      "type": "library", "name": "chrono", "version": "0.4.x",
+      "purl": "pkg:cargo/chrono@0.4",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "Date and time handling"
+    },
+    {
+      "type": "library", "name": "rand", "version": "0.8.x",
+      "purl": "pkg:cargo/rand@0.8",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "Cryptographic nonce generation for RFC 3161 TSQ"
+    },
+    {
+      "type": "library", "name": "hex", "version": "0.4.x",
+      "purl": "pkg:cargo/hex@0.4",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "Hash hex encoding"
+    },
+    {
+      "type": "library", "name": "base64", "version": "0.22.x",
+      "purl": "pkg:cargo/base64@0.22",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "Base64 encoding for TSR token embedding"
+    },
+    {
+      "type": "library", "name": "dirs", "version": "5.x",
+      "purl": "pkg:cargo/dirs@5",
+      "licenses": [{ "license": { "id": "MIT" } }, { "license": { "id": "Apache-2.0" } }],
+      "description": "Platform-specific user directory resolution"
+    }
+  ],
+  "externalReferences": [
+    {
+      "type": "website",
+      "url": "https://terrywhitakergithub.github.io/iartifact-verify",
+      "comment": "Public verifier and registry"
+    },
+    {
+      "type": "security",
+      "url": "https://terrywhitakergithub.github.io/iartifact-verify/security.txt",
+      "comment": "RFC 9116 security.txt — CRA Art. 14 vulnerability reporting endpoint"
+    }
+  ]
+}

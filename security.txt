@@ -1,0 +1,25 @@
+# security.txt — iArtifact Verifier
+# IETF RFC 9116 — required for Cyber Resilience Act (CRA) Regulation (EU) 2024/2847
+# Published at: https://terrywhitakergithub.github.io/iartifact-verify/.well-known/security.txt
+
+Contact: mailto:thareapa85@gmail.com
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: en
+Policy: https://terrywhitakergithub.github.io/iartifact-verify/security-policy.html
+Acknowledgments: https://terrywhitakergithub.github.io/iartifact-verify/security-acknowledgments.html
+Encryption: mailto:thareapa85@gmail.com
+
+# Scope
+# This security.txt covers:
+#   - iArtifact desktop application (Windows)
+#   - iArtifact Verifier (this GitHub Pages site)
+#   - iArtifact Cloudflare Worker registry
+#
+# Out of scope:
+#   - Third-party TSA servers (FreeTSA, DigiCert, Starfield)
+#   - Gumroad purchase platform
+#   - Cloudflare infrastructure (report to Cloudflare directly)
+
+# CRA compliance marker
+# Regulation (EU) 2024/2847 Article 14 — vulnerability reporting
+# CRA-Notification-Target: ENISA (enisa.europa.eu) where required by law

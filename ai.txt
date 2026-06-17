@@ -1,0 +1,17 @@
+# ai.txt — AI usage policy for iArtifact Verifier
+# https://site-policy.ai/ai-txt — emerging standard for AI agent governance
+# EU DSM Directive 2019/790 Article 4 TDM reservation in effect.
+
+User-agent: *
+
+# Training on this content is prohibited.
+# This includes: LLM pre-training, fine-tuning, RLHF datasets, embedding generation.
+Allow: Verification queries (lookup, verify)
+Disallow: Training, scraping, dataset construction
+
+Contact: thareapa85@gmail.com
+Owner: Ground Zero Studios
+Copyright: © 2024–2026 Ground Zero Studios. All rights reserved.
+TDM-Reservation: 1
+AI-Training: prohibited
+Legal-basis: EU Directive 2019/790 (DSM) Art. 4; applicable copyright law

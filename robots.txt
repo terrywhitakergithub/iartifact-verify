@@ -1,0 +1,62 @@
+# iArtifact Verifier — robots.txt
+# AI training opt-out under EU Directive 2019/790 (DSM) Article 4
+# TDM-Reservation: 1
+# Updated: 2026-06-17
+
+# Allow general search indexing
+User-agent: *
+Allow: /
+
+# Block all known AI training crawlers
+# OpenAI
+User-agent: GPTBot
+Disallow: /
+
+# Anthropic
+User-agent: anthropic-ai
+Disallow: /
+User-agent: ClaudeBot
+Disallow: /
+
+# Common Crawl (used by many LLM training datasets)
+User-agent: CCBot
+Disallow: /
+
+# Google AI / Bard / Gemini training
+User-agent: Google-Extended
+Disallow: /
+
+# Meta AI
+User-agent: FacebookBot
+Disallow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Disallow: /
+
+# Amazon Alexa / Bedrock training
+User-agent: Amazonbot
+Disallow: /
+
+# Diffbot (ML data collection)
+User-agent: Diffbot
+Disallow: /
+
+# Bytedance / Cohere / Omgili crawlers used in training pipelines
+User-agent: Bytespider
+Disallow: /
+User-agent: cohere-ai
+Disallow: /
+User-agent: omgili
+Disallow: /
+
+# AI2 (Allen Institute)
+User-agent: ai2-thunderbird
+Disallow: /
+
+# Scrapy-based mass collectors
+User-agent: scrapy
+Disallow: /
+
+# Sitemap
+Sitemap: https://terrywhitakergithub.github.io/iartifact-verify/sitemap.xml
