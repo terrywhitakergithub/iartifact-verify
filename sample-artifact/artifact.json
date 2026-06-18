@@ -1,0 +1,30 @@
+{
+  "schema_version": "",
+  "artifact_type": "Software / Source Code",
+  "edition": "3.9.1",
+  "blockchain": "",
+  "contract": "",
+  "token_id": "1-15177775421",
+  "tx_hash": "",
+  "royalty": "",
+  "license": "Browser — Self-contained HTML5/JS · SDEA EPE Runtime · No server required",
+  "sealed": true,
+  "sealed_at": "2026-06-18T03:18:18Z",
+  "ia_id": "cb9c3f78868d",
+  "cert_date": "6/4/2026",
+  "cert_medium": "Literary Work",
+  "extra_fields": {
+    "cert_no": "1-15177775421",
+    "usage_rights": "Browser — Self-contained HTML5/JS · SDEA EPE Runtime · No server required",
+    "phys_medium": "Html java script",
+    "edition": "3.9.1"
+  },
+  "field_labels": {
+    "cert_no": "Copyright Reg. #",
+    "license": "License",
+    "phys_medium": "Language / Stack",
+    "edition": "Version",
+    "contract": "Repository / URL",
+    "usage_rights": "Platform / Runtime"
+  }
+}

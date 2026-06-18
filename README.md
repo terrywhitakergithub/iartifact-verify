@@ -46,11 +46,20 @@ The current video sidecar is C2PA-structured JSON, not a signed CBOR-encoded C2P
 
 | Target | Scope |
 |---|---|
-| v1.1 | Verifier UI polish, sample sealed artifact for self-test, accessibility audit, optional language localization |
+| v1.1 | ✓ Sample sealed artifact for self-test · ✓ Dual-algo chain · ✓ Three-file seal · ✓ Stamped verdict |
 | v2.0 | Close GAP 1 (full TSA chain validation via PKI.js + DigiCert QTSP root), close GAP 2 (Ed25519 detached manifest signature), close GAP 4 (signed C2PA CBOR for video) |
 | v2.1 | Close GAP 3 image substrate (DCT-domain, key-dependent watermark, tested against JPEG q70–100, resize 50–200%, and center crop) |
 | v2.2 | Close GAP 3 audio substrate (echo-hiding, tested against MP3 128 kbps and 320 kbps re-encode) |
 | v2.3 | Close GAP 3 video substrate (per-keyframe DCT watermark, tested against H.264 re-encode) |
+
+---
+
+## Try it — sample artifact
+
+A real sealed artifact is included in this repo for first-time testing:
+**[sample-artifact/](sample-artifact/)** — EPE 3.9.1 FRAMEWORK (iA-ID `cb9c3f78868d`)
+
+Download the ZIP of this repo, extract the `sample-artifact` subfolder, and drop it onto the verifier. All 5 steps should be green with a VERIFIED verdict.
 
 ---
 

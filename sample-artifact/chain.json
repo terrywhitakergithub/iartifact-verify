@@ -1,0 +1,81 @@
+[
+  {
+    "index": 0,
+    "event": "created",
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "data": {
+      "date": "2026-06-16",
+      "name": "EPE 3.9.1 FRAMEWORK",
+      "type": "Software / Source Code"
+    },
+    "entry_hash": "cb9c3f78868d24c9158a7a286396880eaa9d16787d1400b11a921bffbe1f39c9",
+    "timestamp": "2026-06-16T15:25:14Z"
+  },
+  {
+    "index": 1,
+    "event": "scan",
+    "prev_hash": "cb9c3f78868d24c9158a7a286396880eaa9d16787d1400b11a921bffbe1f39c9",
+    "data": {
+      "file_count": 1,
+      "trigger": "drag-drop"
+    },
+    "entry_hash": "3c1277588b1ee1af91834ac497152de3cda4360c280a3803321939ddfa33512d",
+    "timestamp": "2026-06-16T15:41:15Z"
+  },
+  {
+    "index": 2,
+    "event": "scan",
+    "prev_hash": "3c1277588b1ee1af91834ac497152de3cda4360c280a3803321939ddfa33512d",
+    "data": {
+      "file_count": 1
+    },
+    "entry_hash": "cab098de93f3de6bba36d5cca1dda29eb1524bfa1a40ec3407300c8e7b61f08c",
+    "timestamp": "2026-06-16T15:41:21Z"
+  },
+  {
+    "index": 3,
+    "event": "scan",
+    "prev_hash": "cab098de93f3de6bba36d5cca1dda29eb1524bfa1a40ec3407300c8e7b61f08c",
+    "data": {
+      "file_count": 1
+    },
+    "entry_hash": "e78e09097686e6bb0fdb7d35ccfe08643cd24d260514717d88fe91b3eb7d1ee5",
+    "timestamp": "2026-06-16T15:41:25Z"
+  },
+  {
+    "index": 4,
+    "event": "scan",
+    "prev_hash": "e78e09097686e6bb0fdb7d35ccfe08643cd24d260514717d88fe91b3eb7d1ee5",
+    "data": {
+      "file_count": 1
+    },
+    "entry_hash": "fa85a93829db7d14e24fa4b7705262f96c0139ac1ef360f5a03ee6aba2d1cd96cc6768b765e63639409bb105b59a9808",
+    "timestamp": "2026-06-17T18:20:34Z"
+  },
+  {
+    "index": 5,
+    "event": "stamped",
+    "prev_hash": "fa85a93829db7d14e24fa4b7705262f96c0139ac1ef360f5a03ee6aba2d1cd96cc6768b765e63639409bb105b59a9808",
+    "data": {
+      "file": "manifest.json",
+      "sha384": "830720734e221f2a5d67f975b501dbeaac6b7df50eedd21b8145172043eadb803f5777d2e75aeefb568e291df5a604f5",
+      "tsa": "FreeTSA.org [RFC 3161, not QTSP]"
+    },
+    "entry_hash": "23cd1f5791aebdc61b25f34160af8fe2ca3c6853a98f6c95459850a9b732c5abc83f34d039b36d7a6bada4a6dd1d255e",
+    "timestamp": "2026-06-17T18:22:07Z"
+  },
+  {
+    "index": 6,
+    "event": "sealed",
+    "prev_hash": "23cd1f5791aebdc61b25f34160af8fe2ca3c6853a98f6c95459850a9b732c5abc83f34d039b36d7a6bada4a6dd1d255e",
+    "data": {
+      "artifact_json_sha384": "5e664b301d0f3a1b7e9711b319b4206ad3a209cda9f153c7a42f4e7dea1e91d43ca875f0db9073b66bc6a4e07d2d3083",
+      "ia_id": "cb9c3f78868d",
+      "lineage_sha384": "7ea8c4756eb8c50cdc377be732d4cdcd72b317880a3dac7e526558a16f6e87805216fd9b9d5ba2bf2176af5b6869a26f",
+      "manifest_sha384": "830720734e221f2a5d67f975b501dbeaac6b7df50eedd21b8145172043eadb803f5777d2e75aeefb568e291df5a604f5",
+      "sealed_at": "2026-06-18T03:18:18Z"
+    },
+    "entry_hash": "35e2c17a4ee76fe56a8b306ea2fe72e219e019b22b1b940a5e46ab364898b0a41140e5a2c3ce230d28182a6aaff89106",
+    "timestamp": "2026-06-18T03:18:18Z"
+  }
+]

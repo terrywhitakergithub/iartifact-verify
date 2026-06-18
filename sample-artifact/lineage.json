@@ -1,0 +1,54 @@
+{
+  "entries": [
+    {
+      "timestamp": "2026-06-16T15:25:14Z",
+      "action": "created",
+      "detail": "New iArtifact: EPE 3.9.1 FRAMEWORK (Software / Source Code)"
+    },
+    {
+      "timestamp": "2026-06-16T15:35:23Z",
+      "action": "meta-updated",
+      "detail": "Artifact metadata saved"
+    },
+    {
+      "timestamp": "2026-06-16T15:35:23Z",
+      "action": "constitution-updated",
+      "detail": "Constitution saved"
+    },
+    {
+      "timestamp": "2026-06-16T15:38:03Z",
+      "action": "constitution-updated",
+      "detail": "Constitution saved"
+    },
+    {
+      "timestamp": "2026-06-16T15:41:15Z",
+      "action": "scan",
+      "detail": "1 files indexed after drag-drop"
+    },
+    {
+      "timestamp": "2026-06-16T15:41:21Z",
+      "action": "scan",
+      "detail": "1 files indexed"
+    },
+    {
+      "timestamp": "2026-06-16T15:41:25Z",
+      "action": "scan",
+      "detail": "1 files indexed"
+    },
+    {
+      "timestamp": "2026-06-17T18:20:34Z",
+      "action": "scan",
+      "detail": "1 files indexed"
+    },
+    {
+      "timestamp": "2026-06-17T18:22:07Z",
+      "action": "stamped",
+      "detail": "RFC 3161 timestamp applied to manifest.json"
+    },
+    {
+      "timestamp": "2026-06-18T03:18:18Z",
+      "action": "sealed",
+      "detail": "Artifact sealed at 2026-06-18T03:18:18Z"
+    }
+  ]
+}
