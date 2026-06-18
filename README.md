@@ -38,6 +38,7 @@ The current video sidecar is C2PA-structured JSON, not a signed CBOR-encoded C2P
 | Version | Date | Notes |
 |---|---|---|
 | v1.0 | 2026-06-17 | Initial public release. File hash + chain + seal verification. TSR grant status check. Registry lookup tab. Commit eb9928b. |
+| v1.1 | 2026-06-18 | GAP 5: dual-algorithm chain support (SHA-256 + SHA-384 per entry, auto-detected). GAP 6: stamped-event handling (STAMPED verdict for RFC 3161 timestamped but not yet sealed). GAP 7: three-file seal coverage (manifest + artifact + lineage, each shown individually). |
 
 ---
 
@@ -61,9 +62,9 @@ Five steps run locally in your browser — no server contact:
 
 2. **File integrity — SHA-384** — For each file listed in the manifest with a recorded hash, the verifier reads the file bytes and recomputes SHA-384 via the Web Crypto API. Any mismatch fails immediately.
 
-3. **Provenance chain integrity** — For each entry in `chain.json`, the verifier recomputes `SHA-384(prev_hash | event | compact_json(data) | timestamp)` and checks that it matches the stored `entry_hash`, and that each entry's `prev_hash` equals the previous entry's `entry_hash`.
+3. **Provenance chain integrity** — For each entry in `chain.json`, the verifier recomputes `ALGO(prev_hash | event | compact_json(data) | timestamp)` and checks that it matches the stored `entry_hash`, and that each entry's `prev_hash` equals the previous entry's `entry_hash`. The hash algorithm is auto-detected per entry from the `entry_hash` length: 64 hex characters = SHA-256, 96 = SHA-384. This means artifacts created before the SHA-384 migration verify correctly alongside newer entries in the same chain.
 
-4. **Seal integrity — manifest hash** — Finds the `sealed` chain event and reads its recorded `manifest_sha384`. Computes SHA-384 of the actual `manifest.json` bytes. If they match, the manifest has not been altered since sealing.
+4. **Seal integrity — three-file coverage** — Handles two seal-phase events distinctly. If a `stamped` event is present but no `sealed` event, the verifier reports STAMPED (RFC 3161 timestamped, not yet finally sealed — a valid intermediate state). If a `sealed` event is found, the verifier reads its recorded `manifest_sha384`, `artifact_json_sha384`, and `lineage_sha384` and computes SHA-384 of each actual file. All three must match for the seal to verify. Each check is displayed individually in the results.
 
 5. **RFC 3161 timestamp status** — For each record in `timestamps.json`, loads the corresponding `.tsr` file and checks the DER PKIStatus byte for granted (`0x00`) or grantedWithMods (`0x01`). This confirms the TSR file's grant status only — full TSA certificate chain validation is GAP 1 above, closing in v2.
 

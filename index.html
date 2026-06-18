@@ -473,8 +473,9 @@ footer a:hover { color: var(--gold); }
       <div class="step-row" id="step4-row">
         <div class="step-icon pending" id="step4-icon">4</div>
         <div class="step-body">
-          <div class="step-label">Seal integrity — manifest hash</div>
+          <div class="step-label">Seal integrity — three-file coverage</div>
           <div class="step-detail" id="step4-detail">Waiting…</div>
+          <div id="seal-results" style="display:none"></div>
         </div>
       </div>
 
@@ -653,6 +654,11 @@ function fileFromEntry(entry) {
 
 // ── Core crypto helpers ────────────────────────────────────────────────────────
 
+async function sha256hex(data) {
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function sha384hex(data) {
   // data: ArrayBuffer or Uint8Array
   const buf = await crypto.subtle.digest('SHA-384', data);
@@ -679,12 +685,14 @@ function readFileText(file) {
   });
 }
 
-// Chain hash: SHA-384(prev_hash + "|" + event + "|" + compact_json(data) + "|" + timestamp)
+// Chain hash: ALGO(prev_hash + "|" + event + "|" + compact_json(data) + "|" + timestamp)
 // Matches Rust: format!("{}|{}|{}|{}", prev, event, data, ts)
 // serde_json Display produces compact JSON; JSON.stringify with no args matches.
-async function computeChainEntryHash(prev, event, data, ts) {
+// algo is auto-detected from entry_hash.length: 64 = SHA-256, 96 = SHA-384.
+async function computeChainEntryHash(prev, event, data, ts, algo = 'SHA-384') {
   const input = `${prev}|${event}|${JSON.stringify(data)}|${ts}`;
-  return sha384hex(new TextEncoder().encode(input));
+  const enc = new TextEncoder().encode(input);
+  return algo === 'SHA-256' ? sha256hex(enc) : sha384hex(enc);
 }
 
 // Mirrors Rust's tsr_is_granted: checks DER PKIStatus for 0 (granted) or 1 (grantedWithMods)
@@ -751,7 +759,7 @@ async function runVerification(fileMap) {
   document.getElementById('file-results').innerHTML = '';
 
   let manifest = null, artifactMeta = null, chain = null, timestamps = null;
-  let manifestBytes = null;
+  let manifestBytes = null, artifactBytes = null, lineageBytes = null;
 
   // ── STEP 1: Locate and parse artifact files ──────────────────────────────
   setStep(1, 'running', 'Reading artifact files…');
@@ -764,7 +772,12 @@ async function runVerification(fileMap) {
 
     const af = fileMap.get('artifact.json');
     if (!af) throw new Error('artifact.json not found in folder');
-    artifactMeta = JSON.parse(await readFileText(af));
+    artifactBytes = await readFileBytes(af);
+    artifactMeta = JSON.parse(new TextDecoder().decode(artifactBytes));
+
+    // lineage.json optional — needed for three-file seal verification
+    const lfLin = fileMap.get('lineage.json');
+    if (lfLin) lineageBytes = await readFileBytes(lfLin);
 
     const cf = fileMap.get('chain.json');
     if (!cf) throw new Error('chain.json not found in folder');
@@ -869,8 +882,9 @@ async function runVerification(fileMap) {
       break;
     }
 
-    // Recompute entry_hash
-    const computed = await computeChainEntryHash(e.prev_hash, e.event, e.data, e.timestamp);
+    // Auto-detect hash algorithm from entry_hash length: 64 = SHA-256, 96 = SHA-384
+    const algo = e.entry_hash.length === 64 ? 'SHA-256' : 'SHA-384';
+    const computed = await computeChainEntryHash(e.prev_hash, e.event, e.data, e.timestamp, algo);
     if (computed !== e.entry_hash) {
       chainBad++;
       chainBadDetail = `Entry ${i} (${esc(e.event)}): hash mismatch — entry may be tampered`;
@@ -885,33 +899,112 @@ async function runVerification(fileMap) {
     setStep(3, 'pass', `All ${chainOk} chain entries verified ✓`);
   }
 
-  // ── STEP 4: Seal integrity — manifest hash in sealed chain event ──────────
+  // ── STEP 4: Seal integrity — three-file coverage (manifest + artifact + lineage) ──
   setStep(4, 'running', 'Checking seal chain event…');
   let sealPass = false, sealDetail = '', sealState = 'fail';
 
-  const sealEntry = chain.slice().reverse().find(e => e.event === 'sealed');
-  if (!sealEntry) {
+  const sealEntry  = chain.slice().reverse().find(e => e.event === 'sealed');
+  const stampEntry = chain.slice().reverse().find(e => e.event === 'stamped');
+  const sealResultEl = document.getElementById('seal-results');
+  sealResultEl.innerHTML = '';
+  sealResultEl.style.display = 'none';
+
+  if (!sealEntry && !stampEntry) {
     sealState = 'warn';
-    sealDetail = 'No "sealed" event found in chain — this artifact has not been sealed';
-  } else {
-    const recordedManifestHash = sealEntry.data && sealEntry.data.manifest_sha384;
-    if (!recordedManifestHash) {
-      sealState = 'warn';
-      sealDetail = 'Sealed chain event found but no manifest_sha384 recorded';
-    } else {
-      // Compute SHA-384 of the manifest.json bytes we read
-      const actualManifestHash = await sha384hex(manifestBytes);
-      if (actualManifestHash === recordedManifestHash) {
-        sealPass = true;
-        sealState = 'pass';
-        sealDetail = `Manifest hash verified — sealed at ${fmtDate(sealEntry.data.sealed_at || '')}`;
+    sealDetail = 'No "sealed" or "stamped" event in chain — this artifact has not been sealed or stamped';
+
+  } else if (stampEntry && !sealEntry) {
+    // Stamped but not yet sealed — valid intermediate state
+    const stampedHash = stampEntry.data && (stampEntry.data.sha384 || stampEntry.data.manifest_sha384);
+    const stampTime   = fmtDate((stampEntry.data && stampEntry.data.stamped_at) || stampEntry.timestamp || '');
+    if (stampedHash) {
+      const actual = await sha384hex(manifestBytes);
+      if (actual === stampedHash) {
+        sealState = 'stamped';
+        sealDetail = `RFC 3161 timestamped at ${stampTime} — manifest hash matches stamp record`;
       } else {
         sealState = 'fail';
-        sealDetail = `TAMPERED — manifest.json hash does not match sealed record. Recorded: …${recordedManifestHash.slice(-16)} · Actual: …${actualManifestHash.slice(-16)}`;
+        sealDetail = `TAMPERED — manifest.json hash does not match stamp record. Recorded: …${stampedHash.slice(-16)} · Actual: …${actual.slice(-16)}`;
       }
+    } else {
+      sealState = 'stamped';
+      sealDetail = `RFC 3161 timestamped at ${stampTime} — no manifest hash in stamp record`;
+    }
+
+  } else if (sealEntry) {
+    // Sealed — verify all three sealed files
+    const recManifest  = sealEntry.data && sealEntry.data.manifest_sha384;
+    const recArtifact  = sealEntry.data && sealEntry.data.artifact_json_sha384;
+    const recLineage   = sealEntry.data && sealEntry.data.lineage_sha384;
+    const checks = [];
+    let anyFail = false;
+
+    // 1. manifest.json
+    if (recManifest) {
+      const actual = await sha384hex(manifestBytes);
+      const ok = actual === recManifest;
+      if (!ok) anyFail = true;
+      checks.push({ label: 'Manifest hash matches seal', ok, extra: ok ? '' : `Expected …${recManifest.slice(-12)} · Got …${actual.slice(-12)}` });
+    } else {
+      anyFail = true;
+      checks.push({ label: 'Manifest hash', ok: false, extra: 'No manifest_sha384 in seal event' });
+    }
+
+    // 2. artifact.json
+    if (recArtifact) {
+      if (artifactBytes) {
+        const actual = await sha384hex(artifactBytes);
+        const ok = actual === recArtifact;
+        if (!ok) anyFail = true;
+        checks.push({ label: 'Artifact metadata hash matches seal', ok, extra: ok ? '' : `Expected …${recArtifact.slice(-12)} · Got …${actual.slice(-12)}` });
+      } else {
+        anyFail = true;
+        checks.push({ label: 'Artifact metadata hash', ok: false, extra: 'artifact.json not readable' });
+      }
+    } else {
+      // Older seal format without this field — skip gracefully
+      checks.push({ label: 'Artifact metadata hash', ok: null, extra: 'Not recorded in seal (pre-v2 format)' });
+    }
+
+    // 3. lineage.json
+    if (recLineage) {
+      if (lineageBytes) {
+        const actual = await sha384hex(lineageBytes);
+        const ok = actual === recLineage;
+        if (!ok) anyFail = true;
+        checks.push({ label: 'Lineage hash matches seal', ok, extra: ok ? '' : `Expected …${recLineage.slice(-12)} · Got …${actual.slice(-12)}` });
+      } else {
+        anyFail = true;
+        checks.push({ label: 'Lineage hash', ok: false, extra: 'lineage.json not found in folder' });
+      }
+    } else {
+      checks.push({ label: 'Lineage hash', ok: null, extra: 'Not recorded in seal (pre-v2 format)' });
+    }
+
+    // Render check list
+    sealResultEl.innerHTML = '<div class="file-list">' + checks.map(c => {
+      const sc = c.ok === true ? 'ok' : c.ok === false ? 'bad' : 'warn';
+      const ic = c.ok === true ? '✓'  : c.ok === false ? '✗'  : '?';
+      return `<div class="file-row ${sc}">
+        <span class="f-status">${ic}</span>
+        <span class="f-path">${esc(c.label)}</span>
+        ${c.extra ? `<span class="f-err">${esc(c.extra)}</span>` : ''}
+      </div>`;
+    }).join('') + '</div>';
+    sealResultEl.style.display = '';
+
+    if (anyFail) {
+      sealState  = 'fail';
+      sealDetail = 'Seal integrity FAILED — one or more sealed file hashes do not match';
+    } else {
+      const passCount = checks.filter(c => c.ok === true).length;
+      sealPass   = true;
+      sealState  = 'pass';
+      sealDetail = `${passCount} sealed file${passCount !== 1 ? 's' : ''} verified — sealed at ${fmtDate((sealEntry.data && sealEntry.data.sealed_at) || '')}`;
     }
   }
-  setStep(4, sealState, sealDetail, sealState === 'fail' ? 'err' : '');
+
+  setStep(4, sealState === 'stamped' ? 'warn' : sealState, sealDetail, sealState === 'fail' ? 'err' : '');
 
   // ── STEP 5: RFC 3161 timestamp status ─────────────────────────────────────
   setStep(5, 'running', 'Checking timestamp tokens…');
@@ -959,6 +1052,11 @@ async function runVerification(fileMap) {
     icon    = '🚫';
     label   = 'TAMPERED';
     sub     = 'One or more cryptographic checks failed. This artifact\'s integrity cannot be confirmed. See the failed steps above.';
+  } else if (sealState === 'stamped') {
+    verdict = 'incomplete';
+    icon    = '⏱';
+    label   = 'STAMPED';
+    sub     = 'RFC 3161 timestamped but not yet finally sealed. File hashes and chain integrity verified. Sealing records the manifest hash in the chain as the final commit — this artifact has been timestamped but that final step has not yet been taken.';
   } else if (!sealed) {
     verdict = 'incomplete';
     icon    = '⚠';
@@ -1037,6 +1135,10 @@ function resetVerifier() {
   document.getElementById('folder-input').value = '';
   document.getElementById('registry-followup-details').style.display = 'none';
   document.getElementById('followup-result').textContent = '';
+  document.getElementById('file-results').innerHTML = '';
+  document.getElementById('file-results').style.display = 'none';
+  document.getElementById('seal-results').innerHTML = '';
+  document.getElementById('seal-results').style.display = 'none';
   document.getElementById('drop-zone').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
