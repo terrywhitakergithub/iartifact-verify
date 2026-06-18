@@ -3,7 +3,8 @@
 Client-side verifier for iArtifact sealed works. Drop an artifact folder into the page and verify locally that the seal is intact, the chain is unbroken, and every file matches its recorded hash. Everything runs in your browser. No server. No account. No upload.
 
 **Live verifier:** https://terrywhitakergithub.github.io/iartifact-verify/  
-**Get iArtifact:** https://terrywhitaker.gumroad.com/l/iartifact-windows — 7-day free trial, Windows 10+  
+**Get iArtifact:** https://terrywhitaker.gumroad.com/l/iartifact-windows — 7-day free trial, Windows 10+
+**Current app version:** v2.0.2  
 **Download page:** https://terrywhitakergithub.github.io/iartifact-releases/
 
 ---
@@ -44,6 +45,8 @@ The current video sidecar is C2PA-structured JSON, not a signed CBOR-encoded C2P
 | v1.0 | 2026-06-17 | Initial public release. File hash + chain + seal verification. TSR grant status check. Registry lookup tab. Commit eb9928b. |
 | v1.1 | 2026-06-18 | GAP 5: dual-algorithm chain support (SHA-256 + SHA-384 per entry, auto-detected). GAP 6: stamped-event handling (STAMPED verdict for RFC 3161 timestamped but not yet sealed). GAP 7: three-file seal coverage (manifest + artifact + lineage, each shown individually). |
 | v2.0.0 | 2026-06-18 | Synced with iArtifact v2.0.0. iA- prefix handling: ?id=iA-XXXX deep-links from app now resolve correctly. Registry input accepts paste with or without iA- prefix. Artifact info grid displays iA-XXXX format matching app display. Footer version bump. |
+| v2.0.1 | 2026-06-18 | Synced with iArtifact v2.0.1. Fixed create artifact button, carousel start button, CA key folder button. GitHub Gist public audit log. Registry token UX fix. |
+| v2.0.2 | 2026-06-18 | Synced with iArtifact v2.0.2. Owner key bypass for developer activation. Fixed Gumroad link (was 404). Keys confirmed to survive updates (stored in ~/.iartifact, not AppData). |
 
 ---
 

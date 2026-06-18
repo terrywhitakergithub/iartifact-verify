@@ -1,6 +1,6 @@
 {
-  "version": "2.0.1",
-  "notes": "v2.0.1 — fixed create artifact button, carousel start button, CA key folder button; GitHub Gist audit log; registry token UX.",
-  "download_url": "https://groundzerostudios.gumroad.com",
+  "version": "2.0.2",
+  "notes": "v2.0.2 — owner key bypass; fixed Gumroad link (was 404); keys confirmed to survive updates.",
+  "download_url": "https://terrywhitaker.gumroad.com/l/iartifact-windows",
   "pub_date": "2026-06-18"
 }

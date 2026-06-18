@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "iartifact-verify",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3456", "C:\\Users\\GROUND ZERO STUDIOS\\Documents\\iartifact-verify"],
+      "port": 3456
+    }
+  ]
+}
