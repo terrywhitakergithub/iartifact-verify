@@ -562,9 +562,9 @@ footer a:hover { color: var(--gold); }
 </section>
 
 <footer>
-  <strong style="color:var(--gold)">Built by Ground Zero Studios</strong> &nbsp;·&nbsp; MIT licensed &nbsp;·&nbsp; v1.0.0<br>
+  <strong style="color:var(--gold)">Built by Ground Zero Studios</strong> &nbsp;·&nbsp; MIT licensed &nbsp;·&nbsp; v2.0.0<br>
   <span style="font-size:11px;opacity:0.6">RFC 3161 status · SHA-384 · eIDAS Art. 41 · EU AI Act Art. 50</span><br>
-  <span style="font-size:11px;opacity:0.6">© 2025–2026 Terry Whitaker · U.S. Copyright Reg. 1-15177775421</span>
+  <span style="font-size:11px;opacity:0.6">© 2026 Terry Whitaker · U.S. Copyright Reg. 1-15177775421</span>
 </footer>
 
 <script>
@@ -1129,7 +1129,7 @@ function showVerdict(verdict, icon, label, sub, meta, manifest) {
       <div class="card-title" style="margin-bottom:12px">Artifact Details</div>
       <div class="info-grid">
         <div class="info-label">iA-ID</div>
-        <div class="info-value mono">${esc(meta.ia_id || '—')}</div>
+        <div class="info-value mono">${meta.ia_id ? 'iA-' + esc(meta.ia_id) : '—'}</div>
         <div class="info-label">Status</div>
         <div class="info-value ${sealedClass}">${sealedLabel}</div>
         <div class="info-label">Sealed at</div>
@@ -1200,21 +1200,25 @@ async function registryLookup() {
   const btn = document.querySelector('#registry-panel .verify-btn');
 
   if (!input) { status.textContent = 'Enter an iA-ID to look up.'; return; }
-  if (!/^[0-9a-f]{12,64}$/i.test(input)) {
-    status.textContent = 'iA-IDs are hex strings (0-9, a-f), 12–64 characters.';
+  // Strip iA- prefix if user pasted from the app (e.g. "iA-3a7f2c1b9e04")
+  const cleanInput = input.replace(/^iA-/i, '');
+  if (!/^[0-9a-f]{12,64}$/i.test(cleanInput)) {
+    status.textContent = 'iA-IDs are hex strings (0-9, a-f), 12–64 characters. You can paste with or without the "iA-" prefix.';
     result.style.display = 'none';
     return;
   }
+  // Use cleanInput for the actual lookup (raw hex, no prefix)
+  document.getElementById('ia-input').value = cleanInput;
 
   btn.disabled = true;
   status.innerHTML = '<span class="pulse">Querying registry…</span>';
   result.style.display = 'none';
 
   try {
-    const resp = await fetch(`${REGISTRY}/lookup?ia=${encodeURIComponent(input.toLowerCase())}`);
+    const resp = await fetch(`${REGISTRY}/lookup?ia=${encodeURIComponent(cleanInput.toLowerCase())}`);
     const data = await resp.json();
     if (resp.status === 404 || !data.found) {
-      showRegNotFound(input, result);
+      showRegNotFound(cleanInput, result);
     } else {
       showRegFound(data, result);
     }
@@ -1289,12 +1293,14 @@ function showRegNotFound(ia_id, el) {
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  // Auto-read ?ia= from URL on page load (QR codes land here)
+  // Auto-read ?ia= or ?id= from URL on page load (QR codes, celebration button land here)
   const params = new URLSearchParams(window.location.search);
-  const ia = params.get('ia') || params.get('id') || '';
-  if (ia) {
+  const iaRaw = params.get('ia') || params.get('id') || '';
+  if (iaRaw) {
+    // Strip iA- prefix if present (celebration button sends "iA-XXXX")
+    const ia = iaRaw.trim().replace(/^iA-/i, '');
     switchTab('registry');
-    document.getElementById('ia-input').value = ia.trim();
+    document.getElementById('ia-input').value = ia;
     registryLookup();
   }
 
