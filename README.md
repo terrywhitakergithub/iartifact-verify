@@ -2,6 +2,10 @@
 
 Client-side verifier for iArtifact sealed works. Drop an artifact folder into the page and verify locally that the seal is intact, the chain is unbroken, and every file matches its recorded hash. Everything runs in your browser. No server. No account. No upload.
 
+**Live verifier:** https://terrywhitakergithub.github.io/iartifact-verify/  
+**Get iArtifact:** https://terrywhitaker.gumroad.com/l/iartifact-windows — 7-day free trial, Windows 10+  
+**Download page:** https://terrywhitakergithub.github.io/iartifact-releases/
+
 ---
 
 ## What v1.0 actually verifies
