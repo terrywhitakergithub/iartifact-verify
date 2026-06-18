@@ -8,281 +8,377 @@
 <meta name="robots" content="noai, noimageai">
 <meta name="tdm-reservation" content="1">
 <meta name="ai-training" content="prohibited">
-<meta name="copyright" content="© 2024–2026 Ground Zero Studios. All rights reserved.">
+<meta name="copyright" content="© 2025–2026 Terry Whitaker / Ground Zero Studios. All rights reserved.">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg:      #0e0e0f;
-    --paper:   #16161a;
-    --paper2:  #1e1e24;
-    --border:  #2a2a35;
-    --ink:     #e8e8ec;
-    --ink2:    #9494a8;
-    --ink3:    #5a5a72;
-    --gold:    #c9a84c;
-    --green:   #22c55e;
-    --red:     #ef4444;
-    --amber:   #d97706;
-    --radius:  10px;
-  }
+:root {
+  --bg:      #0e0e0f;
+  --paper:   #16161a;
+  --paper2:  #1e1e24;
+  --border:  #2a2a35;
+  --ink:     #e8e8ec;
+  --ink2:    #9494a8;
+  --ink3:    #5a5a72;
+  --gold:    #c9a84c;
+  --green:   #22c55e;
+  --red:     #ef4444;
+  --amber:   #d97706;
+  --radius:  10px;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: 'Georgia', serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px 80px;
-  }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Georgia', serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px 80px;
+}
 
-  header {
-    text-align: center;
-    margin-bottom: 40px;
-  }
-  .wordmark {
-    font-size: 13px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 8px;
-  }
-  h1 {
-    font-size: 22px;
-    font-weight: 400;
-    color: var(--ink);
-    letter-spacing: 0.04em;
-  }
-  .subtitle {
-    font-size: 12px;
-    color: var(--ink3);
-    margin-top: 6px;
-    font-style: italic;
-  }
+/* ── Branded topbar header ── */
+header {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 0;
+}
+.hero-icon {
+  position: relative;
+  width: 38px;
+  height: 46px;
+  flex-shrink: 0;
+}
+.hero-icon-glow {
+  position: absolute;
+  width: 80px; height: 90px;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse, rgba(201,168,76,0.25) 0%, transparent 70%);
+  filter: blur(10px);
+  animation: hero-pulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes hero-pulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
+.hero-icon svg {
+  width: 100%; height: 100%;
+  filter: drop-shadow(0 0 6px rgba(201,168,76,0.7))
+          drop-shadow(0 0 18px rgba(201,168,76,0.3));
+}
+.hero-icon svg path, .hero-icon svg line {
+  fill: none; stroke: #f5c96a; stroke-width: 9;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.hero-icon svg .doc-fill { fill: rgba(245,201,106,0.07); }
+.hero-brand { flex: 1; min-width: 0; }
+.hero-wordmark {
+  font-size: 18px; font-weight: 700; color: #fff;
+  line-height: 1.1; font-family: 'Georgia', serif;
+}
+.hero-wordmark em { font-style: italic; font-weight: 400; color: var(--ink2); }
+.hero-tagline {
+  font-size: 11px; color: var(--gold);
+  letter-spacing: 0.06em; font-style: italic; opacity: 0.8;
+}
+.hero-badges {
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;
+}
+.hero-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: rgba(245,201,106,0.65);
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
+}
+.hero-badge svg { width: 10px; height: 10px; flex-shrink: 0; }
 
-  .card {
-    background: var(--paper);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 32px;
-    width: 100%;
-    max-width: 620px;
-    margin-bottom: 20px;
-  }
+/* ── Tab bar ── */
+.tab-bar {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--ink3);
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+  font-size: 13px;
+  padding: 10px 20px;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
 
-  .search-row {
-    display: flex;
-    gap: 10px;
-  }
-  input[type="text"] {
-    flex: 1;
-    background: var(--paper2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--ink);
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    padding: 10px 14px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input[type="text"]:focus { border-color: var(--gold); }
-  input[type="text"]::placeholder { color: var(--ink3); }
+/* ── Cards ── */
+.panel { width: 100%; max-width: 680px; }
+.card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink2);
+  margin-bottom: 14px;
+}
+.panel-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.7;
+  margin-bottom: 18px;
+  font-style: italic;
+}
 
-  button {
-    background: var(--gold);
-    border: none;
-    border-radius: 6px;
-    color: #0e0e0f;
-    cursor: pointer;
-    font-family: 'Georgia', serif;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 10px 20px;
-    transition: opacity 0.15s;
-    white-space: nowrap;
-  }
-  button:hover { opacity: 0.88; }
-  button:disabled { opacity: 0.4; cursor: default; }
+/* ── Drop zone ── */
+#drop-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  padding: 40px 24px;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+#drop-zone.drag-over {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.05);
+}
+.drop-icon { font-size: 36px; margin-bottom: 12px; }
+.drop-text { font-size: 15px; color: var(--ink); margin-bottom: 6px; }
+.drop-sub { font-size: 12px; color: var(--ink3); margin-bottom: 14px; }
+#choose-btn {
+  background: none;
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 6px;
+  color: var(--gold);
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 20px;
+  transition: background 0.15s;
+}
+#choose-btn:hover { background: rgba(201,168,76,0.08); }
 
-  #status {
-    font-size: 12px;
-    color: var(--ink3);
-    text-align: center;
-    margin-top: 12px;
-    min-height: 18px;
-    font-style: italic;
-  }
+/* ── Step indicators ── */
+.step-list { display: flex; flex-direction: column; gap: 10px; }
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.step-icon {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px; font-weight: 700;
+  margin-top: 1px;
+}
+.step-icon.pending  { background: var(--paper2); color: var(--ink3); border: 1px solid var(--border); }
+.step-icon.running  { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.4); animation: spin 1s linear infinite; }
+.step-icon.pass     { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.4); }
+.step-icon.fail     { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.4); }
+.step-icon.warn     { background: rgba(217,119,6,0.12); color: var(--amber); border: 1px solid rgba(217,119,6,0.4); }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.step-body { flex: 1; }
+.step-label { font-size: 13px; color: var(--ink); margin-bottom: 2px; }
+.step-detail { font-size: 11px; color: var(--ink3); font-style: italic; line-height: 1.5; }
+.step-detail.err { color: var(--red); font-style: normal; font-family: 'Courier New', monospace; }
+.step-detail.pass { color: var(--green); font-style: normal; }
 
-  /* Result card */
-  #result { display: none; }
+/* ── File results list ── */
+.file-list {
+  margin-top: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+}
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-bottom: 1px solid rgba(42,42,53,0.5);
+}
+.file-row:last-child { border-bottom: none; }
+.file-row .f-status { flex-shrink: 0; font-size: 11px; }
+.file-row .f-path { flex: 1; color: var(--ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-row .f-err { color: var(--red); font-size: 9px; }
+.file-row.ok .f-status { color: var(--green); }
+.file-row.bad .f-status { color: var(--red); }
+.file-row.warn .f-status { color: var(--amber); }
 
-  .verdict {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 18px 0 20px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 22px;
-  }
-  .verdict-icon {
-    font-size: 32px;
-    flex-shrink: 0;
-  }
-  .verdict-text { flex: 1; }
-  .verdict-label {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 3px;
-  }
-  .verdict-sub {
-    font-size: 11px;
-    color: var(--ink3);
-    font-style: italic;
-  }
+/* ── Verdict ── */
+.verdict-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.verdict-banner.verified { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3); }
+.verdict-banner.tampered { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); }
+.verdict-banner.incomplete { background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.3); }
+.verdict-banner.invalid   { background: rgba(90,90,114,0.15); border: 1px solid var(--border); }
+.verdict-icon-big { font-size: 36px; flex-shrink: 0; }
+.verdict-main { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.verdict-banner.verified  .verdict-main { color: var(--green); }
+.verdict-banner.tampered  .verdict-main { color: var(--red); }
+.verdict-banner.incomplete .verdict-main { color: var(--amber); }
+.verdict-banner.invalid   .verdict-main { color: var(--ink2); }
+.verdict-sub { font-size: 12px; color: var(--ink3); font-style: italic; line-height: 1.5; }
 
-  .field-grid {
-    display: grid;
-    grid-template-columns: 140px 1fr;
-    gap: 10px 16px;
-    font-size: 12px;
-  }
-  .field-label {
-    color: var(--ink3);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 10px;
-    padding-top: 2px;
-  }
-  .field-value {
-    color: var(--ink);
-    word-break: break-all;
-  }
-  .field-value.mono {
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    color: var(--ink2);
-  }
-  .field-value.sealed {
-    color: var(--red);
-    font-weight: 700;
-  }
-  .field-value.not-found {
-    color: var(--amber);
-  }
+/* ── Artifact info grid ── */
+.info-grid {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 8px 14px;
+  font-size: 12px;
+}
+.info-label {
+  color: var(--ink3); text-transform: uppercase;
+  letter-spacing: 0.08em; font-size: 10px; padding-top: 2px;
+}
+.info-value { color: var(--ink); word-break: break-all; }
+.info-value.mono { font-family: 'Courier New', monospace; font-size: 11px; color: var(--ink2); }
+.info-value.sealed-yes { color: var(--green); font-weight: 700; }
+.info-value.sealed-no  { color: var(--amber); }
 
-  .chain-hash {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--ink3);
-  }
-  .chain-hash span {
-    display: block;
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    color: var(--ink3);
-    margin-top: 4px;
-    word-break: break-all;
-  }
+/* ── Registry panel ── */
+.registry-notice {
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--ink3);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.registry-notice strong { color: var(--gold); }
+.search-row { display: flex; gap: 10px; }
+input[type="text"] {
+  flex: 1;
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--ink);
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+input[type="text"]:focus { border-color: var(--gold); }
+input[type="text"]::placeholder { color: var(--ink3); }
 
-  .not-found-card { text-align: center; padding: 32px; }
-  .not-found-card .nf-icon { font-size: 36px; margin-bottom: 12px; }
-  .not-found-card .nf-title { font-size: 15px; color: var(--amber); margin-bottom: 8px; }
-  .not-found-card .nf-body { font-size: 12px; color: var(--ink3); line-height: 1.7; }
+button.verify-btn {
+  background: var(--gold);
+  border: none;
+  border-radius: 6px;
+  color: #0e0e0f;
+  cursor: pointer;
+  font-family: 'Georgia', serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 20px;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+button.verify-btn:hover { opacity: 0.88; }
+button.verify-btn:disabled { opacity: 0.4; cursor: default; }
 
-  footer {
-    font-size: 10px;
-    color: var(--ink3);
-    text-align: center;
-    margin-top: 32px;
-    line-height: 1.8;
-  }
-  footer a { color: var(--ink3); text-decoration: none; }
-  footer a:hover { color: var(--gold); }
+#reg-status {
+  font-size: 12px; color: var(--ink3);
+  text-align: center; margin-top: 12px;
+  min-height: 18px; font-style: italic;
+}
+#reg-result { display: none; }
 
-  .pulse { animation: pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.verdict { display: flex; align-items: center; gap: 14px; padding: 18px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+.verdict-icon { font-size: 32px; flex-shrink: 0; }
+.verdict-text { flex: 1; }
+.verdict-label { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.verdict-sub-reg { font-size: 11px; color: var(--ink3); font-style: italic; }
+.field-grid { display: grid; grid-template-columns: 140px 1fr; gap: 10px 16px; font-size: 12px; }
+.field-label { color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; padding-top: 2px; }
+.field-value { color: var(--ink); word-break: break-all; }
+.field-value.mono { font-family: 'Courier New', monospace; font-size: 11px; color: var(--ink2); }
+.field-value.sealed-val { color: var(--red); font-weight: 700; }
+.field-value.not-found { color: var(--amber); }
+.chain-hash { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--ink3); }
+.chain-hash span { display: block; font-family: 'Courier New', monospace; font-size: 10px; color: var(--ink3); margin-top: 4px; word-break: break-all; }
+.not-found-card { text-align: center; padding: 32px; }
+.not-found-card .nf-icon { font-size: 36px; margin-bottom: 12px; }
+.not-found-card .nf-title { font-size: 15px; color: var(--amber); margin-bottom: 8px; }
+.not-found-card .nf-body { font-size: 12px; color: var(--ink3); line-height: 1.7; }
 
-  /* ── Branded topbar header ── */
-  header {
-    width: 100%;
-    max-width: 620px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 28px;
-    padding: 0;
-  }
-  .hero-icon {
-    position: relative;
-    width: 38px;
-    height: 46px;
-    flex-shrink: 0;
-  }
-  .hero-icon-glow {
-    position: absolute;
-    width: 80px; height: 90px;
-    left: 50%; top: 50%;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(ellipse, rgba(201,168,76,0.25) 0%, transparent 70%);
-    filter: blur(10px);
-    animation: hero-pulse 3s ease-in-out infinite;
-    pointer-events: none;
-  }
-  @keyframes hero-pulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
-  .hero-icon svg {
-    width: 100%; height: 100%;
-    filter: drop-shadow(0 0 6px rgba(201,168,76,0.7))
-            drop-shadow(0 0 18px rgba(201,168,76,0.3));
-  }
-  .hero-icon svg path, .hero-icon svg line {
-    fill: none; stroke: #f5c96a; stroke-width: 9;
-    stroke-linecap: round; stroke-linejoin: round;
-  }
-  .hero-icon svg .doc-fill { fill: rgba(245,201,106,0.07); }
-  .hero-brand {
-    flex: 1;
-    min-width: 0;
-  }
-  .hero-wordmark {
-    font-size: 18px;
-    font-weight: 700;
-    color: #fff;
-    line-height: 1.1;
-    font-family: 'Georgia', serif;
-  }
-  .hero-wordmark em { font-style: italic; font-weight: 400; color: var(--ink2); }
-  .hero-tagline {
-    font-size: 11px;
-    color: var(--gold);
-    letter-spacing: 0.06em;
-    font-style: italic;
-    opacity: 0.8;
-  }
-  .hero-badges {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-  .hero-badge {
-    display: flex; align-items: center; gap: 5px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(201,168,76,0.2);
-    border-radius: 4px;
-    padding: 3px 8px;
-    font-size: 9px; font-weight: 700;
-    letter-spacing: 0.07em; text-transform: uppercase;
-    color: rgba(245,201,106,0.65);
-    font-family: 'Courier New', monospace;
-    white-space: nowrap;
-  }
-  .hero-badge svg { width: 10px; height: 10px; flex-shrink: 0; }
-  @media (max-width: 500px) { .hero-badges { display: none; } }
+/* ── Optional registry follow-up ── */
+.registry-followup {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.registry-followup summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink3);
+  user-select: none;
+  list-style: none;
+}
+.registry-followup summary::before { content: '▶ '; font-size: 9px; }
+details[open] .registry-followup summary::before { content: '▼ '; }
+.followup-inner { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.followup-search { display: flex; gap: 8px; }
+.followup-search input { font-size: 11px; padding: 6px 10px; }
+.followup-search button { font-size: 11px; padding: 6px 12px; }
+#followup-result { font-size: 11px; color: var(--ink3); font-style: italic; min-height: 16px; }
+
+/* ── Footer ── */
+footer {
+  font-size: 10px;
+  color: var(--ink3);
+  text-align: center;
+  margin-top: 32px;
+  line-height: 2;
+  max-width: 680px;
+}
+footer a { color: var(--ink3); text-decoration: none; }
+footer a:hover { color: var(--gold); }
+
+.pulse { animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+@media (max-width: 500px) { .hero-badges { display: none; } .tab-btn { padding: 10px 12px; font-size: 12px; } }
 </style>
 </head>
 <body>
@@ -321,48 +417,666 @@
   </div>
 </header>
 
-<div class="card">
-  <div class="search-row">
-    <input type="text" id="ia-input" placeholder="iA-ID (e.g. 3a7f2c1b9e04…)" autocomplete="off" spellcheck="false">
-    <button id="verify-btn" onclick="verify()">Verify</button>
-  </div>
-  <div id="status"></div>
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-verify" onclick="switchTab('verify')">Verify Artifact</button>
+  <button class="tab-btn" id="tab-registry" onclick="switchTab('registry')">Registry Lookup</button>
 </div>
 
-<div class="card" id="result"></div>
+<!-- ═══════════════════════════════════════════════════════════
+     PANEL 1 — VERIFY ARTIFACT (full cryptographic verification)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="verify-panel">
+
+  <div class="card">
+    <div class="card-title">Verify Artifact</div>
+    <p class="panel-desc">
+      Drop a sealed iArtifact folder to independently verify: every file hash, the provenance chain,
+      the seal integrity, and RFC 3161 timestamp status.
+      <strong style="color:var(--ink2)">Nothing leaves your machine.</strong>
+      No server. No account. Works offline.
+    </p>
+    <div id="drop-zone">
+      <div class="drop-icon">📂</div>
+      <div class="drop-text">Drop artifact folder here</div>
+      <div class="drop-sub">or</div>
+      <button id="choose-btn" onclick="triggerFolderPick()">Choose Folder</button>
+      <input type="file" id="folder-input" webkitdirectory multiple style="display:none" onchange="handleFolderInput(this)">
+    </div>
+  </div>
+
+  <!-- Steps progress — hidden until verification starts -->
+  <div class="card" id="steps-card" style="display:none">
+    <div class="card-title">Verification Progress</div>
+    <div class="step-list">
+
+      <div class="step-row" id="step1-row">
+        <div class="step-icon pending" id="step1-icon">1</div>
+        <div class="step-body">
+          <div class="step-label">Locate artifact files</div>
+          <div class="step-detail" id="step1-detail">Looking for manifest.json, artifact.json, chain.json…</div>
+        </div>
+      </div>
+
+      <div class="step-row" id="step2-row">
+        <div class="step-icon pending" id="step2-icon">2</div>
+        <div class="step-body">
+          <div class="step-label">File integrity — SHA-384</div>
+          <div class="step-detail" id="step2-detail">Waiting…</div>
+          <div id="file-results" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="step-row" id="step3-row">
+        <div class="step-icon pending" id="step3-icon">3</div>
+        <div class="step-body">
+          <div class="step-label">Provenance chain integrity</div>
+          <div class="step-detail" id="step3-detail">Waiting…</div>
+        </div>
+      </div>
+
+      <div class="step-row" id="step4-row">
+        <div class="step-icon pending" id="step4-icon">4</div>
+        <div class="step-body">
+          <div class="step-label">Seal integrity — manifest hash</div>
+          <div class="step-detail" id="step4-detail">Waiting…</div>
+        </div>
+      </div>
+
+      <div class="step-row" id="step5-row">
+        <div class="step-icon pending" id="step5-icon">5</div>
+        <div class="step-body">
+          <div class="step-label">RFC 3161 timestamp status</div>
+          <div class="step-detail" id="step5-detail">Waiting…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Final verdict — hidden until complete -->
+  <div class="card" id="result-card" style="display:none">
+    <div id="verdict-banner"></div>
+    <div id="artifact-info"></div>
+    <!-- Optional registry follow-up — only shown after verification, user must click -->
+    <details id="registry-followup-details" style="display:none">
+      <summary class="registry-followup" style="cursor:pointer;font-size:12px;color:var(--ink3);user-select:none;list-style:none">
+        Also check public registry? (optional — sends only the iA-ID)
+      </summary>
+      <div class="followup-inner" style="margin-top:12px">
+        <div style="font-size:11px;color:var(--ink3);line-height:1.6">
+          The registry lookup tells you whether the creator has chosen to publish this iA-ID publicly.
+          It is purely informational and does not affect the verification verdict above.
+          The iA-ID will be sent to iartifact-registry.iartifact.workers.dev.
+        </div>
+        <div class="followup-search">
+          <input type="text" id="followup-ia-input" placeholder="iA-ID" style="font-size:11px;padding:6px 10px">
+          <button class="verify-btn" onclick="registryFollowup()" style="font-size:11px;padding:6px 14px">Check Registry</button>
+        </div>
+        <div id="followup-result"></div>
+      </div>
+    </details>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <button onclick="resetVerifier()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--ink3);cursor:pointer;font-family:inherit;font-size:11px;padding:7px 16px;">Verify another folder</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PANEL 2 — REGISTRY LOOKUP (existing functionality, clearly scoped)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="panel" id="registry-panel" style="display:none">
+
+  <div class="card">
+    <div class="card-title">Registry Lookup</div>
+    <div class="registry-notice">
+      <strong>This is a registry query, not a cryptographic verification.</strong>
+      It returns name, owner, timestamp, and seal status as published by the creator.
+      For independent cryptographic verification, use the <em>Verify Artifact</em> tab.
+    </div>
+    <div class="search-row">
+      <input type="text" id="ia-input" placeholder="iA-ID (e.g. 3a7f2c1b9e04…)" autocomplete="off" spellcheck="false">
+      <button class="verify-btn" onclick="registryLookup()">Look Up</button>
+    </div>
+    <div id="reg-status"></div>
+  </div>
+
+  <div class="card" id="reg-result"></div>
+
+</div>
 
 <footer>
-  <strong style="color:var(--gold)">iArtifact</strong> &nbsp;·&nbsp; a <a href="mailto:thareapa85@gmail.com">Ground Zero Studios</a> product<br>
-  <span style="font-size:11px;opacity:0.6">© 2024–2026 Ground Zero Studios. All rights reserved.</span>
+  <strong style="color:var(--gold)">iArtifact v2.0.0</strong> &nbsp;·&nbsp; a <a href="mailto:thareapa85@gmail.com">Ground Zero Studios</a> product<br>
+  <span style="font-size:11px;opacity:0.6">RFC 3161 · SHA-384 · DigiCert QTSP · eIDAS Art. 41 · EU AI Act Art. 50</span><br>
+  <span style="font-size:11px;opacity:0.6">© 2025–2026 Terry Whitaker / Ground Zero Studios. All rights reserved.</span>
 </footer>
 
 <script>
-// Update this to your Cloudflare Worker URL once deployed.
-// Leave empty string to run in offline/local-only mode.
+// ─────────────────────────────────────────────────────────────────────────────
+// iArtifact Verifier — Path B
+// Cryptographic verification of sealed artifact folders.
+// Source: https://github.com/terrywhitakergithub/iartifact-verify
+// Author: Terry Whitaker / Ground Zero Studios
+// License: MIT
+//
+// VERIFICATION ALGORITHM (matches iArtifact Rust app v2.0.0):
+//
+//   Step 1: Parse manifest.json, artifact.json, chain.json, timestamps.json
+//   Step 2: For each file in manifest.files with a sha384:
+//             compute SHA-384 via Web Crypto API → compare to stored hash
+//   Step 3: For each entry in chain.json:
+//             recompute SHA-384("prev|event|compact_json(data)|timestamp")
+//             → compare to entry.entry_hash
+//   Step 4: Find the "sealed" chain event; extract manifest_sha384 from its
+//             data; compute SHA-384 of manifest.json bytes → compare
+//   Step 5: For each record in timestamps.json, find the .tsr file and check
+//             DER grant status (mirrors Rust's tsr_is_granted check)
+//
+// No network requests are made during verification. The optional registry
+// check in Step 5 (follow-up) only fires when the user explicitly clicks it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Registry base URL ─────────────────────────────────────────────────────────
 const REGISTRY = 'https://iartifact-registry.iartifact.workers.dev';
 
-// Auto-read ?ia= from URL on page load (QR codes land here)
-window.addEventListener('DOMContentLoaded', () => {
-  const params = new URLSearchParams(window.location.search);
-  const ia = params.get('ia') || params.get('id') || '';
-  if (ia) {
-    document.getElementById('ia-input').value = ia.trim();
-    verify();
-  }
-  document.getElementById('ia-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') verify();
+// ── Tab switching ──────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('verify-panel').style.display   = tab === 'verify'   ? '' : 'none';
+  document.getElementById('registry-panel').style.display = tab === 'registry' ? '' : 'none';
+  document.getElementById('tab-verify').classList.toggle('active',   tab === 'verify');
+  document.getElementById('tab-registry').classList.toggle('active', tab === 'registry');
+}
+
+// ── Folder input trigger ──────────────────────────────────────────────────────
+function triggerFolderPick() {
+  document.getElementById('folder-input').click();
+}
+
+function handleFolderInput(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const fileMap = new Map();
+  files.forEach(f => {
+    // webkitRelativePath = "rootFolderName/path/to/file"
+    const parts = f.webkitRelativePath.split('/');
+    // Strip the root folder name to get rel_path matching manifest
+    const relPath = parts.slice(1).join('/');
+    if (relPath) fileMap.set(relPath, f);
   });
+  runVerification(fileMap);
+}
+
+// ── Drag and drop ──────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', async e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const items = Array.from(e.dataTransfer.items);
+  const fileMap = new Map();
+  for (const item of items) {
+    const entry = item.webkitGetAsEntry && item.webkitGetAsEntry();
+    if (!entry) continue;
+    if (entry.isDirectory) {
+      await collectDirectoryFiles(entry, '', fileMap);
+    } else if (entry.isFile) {
+      const f = await fileFromEntry(entry);
+      if (f) fileMap.set(f.name, f);
+    }
+  }
+  if (fileMap.size > 0) runVerification(fileMap);
+  else alert('No files found in the dropped folder. Try using "Choose Folder" instead.');
 });
 
-async function verify() {
+async function collectDirectoryFiles(dirEntry, prefix, fileMap) {
+  // Reads all files from a directory entry recursively.
+  // readEntries returns at most 100 entries per call — loop until empty.
+  const reader = dirEntry.createReader();
+  const allEntries = [];
+  await (async function readAll() {
+    const batch = await new Promise(res => reader.readEntries(res, () => res([])));
+    if (batch.length === 0) return;
+    allEntries.push(...batch);
+    await readAll();
+  })();
+  for (const entry of allEntries) {
+    const path = prefix ? prefix + '/' + entry.name : entry.name;
+    if (entry.isFile) {
+      const f = await fileFromEntry(entry);
+      if (f) fileMap.set(path, f);
+    } else if (entry.isDirectory) {
+      await collectDirectoryFiles(entry, path, fileMap);
+    }
+  }
+}
+
+function fileFromEntry(entry) {
+  return new Promise(resolve => entry.file(resolve, () => resolve(null)));
+}
+
+// ── Core crypto helpers ────────────────────────────────────────────────────────
+
+async function sha384hex(data) {
+  // data: ArrayBuffer or Uint8Array
+  const buf = await crypto.subtle.digest('SHA-384', data);
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function readFileBytes(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = e => resolve(new Uint8Array(e.target.result));
+    reader.onerror = () => reject(new Error('File read failed: ' + file.name));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function readFileText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = e => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('File read failed: ' + file.name));
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+// Chain hash: SHA-384(prev_hash + "|" + event + "|" + compact_json(data) + "|" + timestamp)
+// Matches Rust: format!("{}|{}|{}|{}", prev, event, data, ts)
+// serde_json Display produces compact JSON; JSON.stringify with no args matches.
+async function computeChainEntryHash(prev, event, data, ts) {
+  const input = `${prev}|${event}|${JSON.stringify(data)}|${ts}`;
+  return sha384hex(new TextEncoder().encode(input));
+}
+
+// Mirrors Rust's tsr_is_granted: checks DER PKIStatus for 0 (granted) or 1 (grantedWithMods)
+function tsrIsGranted(bytes) {
+  if (bytes.length < 8 || bytes[0] !== 0x30) return false;
+  // Skip outer SEQUENCE length
+  let off = bytes[1] & 0x80 ? 2 + (bytes[1] & 0x7f) : 2;
+  // PKIStatusInfo must be a SEQUENCE (0x30)
+  if (off >= bytes.length || bytes[off] !== 0x30) return false;
+  off += 1;
+  const pkiLenByte = bytes[off]; off += 1;
+  if (pkiLenByte & 0x80) off += pkiLenByte & 0x7f;
+  // PKIStatus must be an INTEGER (0x02)
+  if (off >= bytes.length || bytes[off] !== 0x02) return false;
+  off += 1;
+  const intLen = bytes[off]; off += 1;
+  if (off + intLen > bytes.length) return false;
+  const status = bytes[off + intLen - 1];
+  return status === 0 || status === 1;
+}
+
+// ── UI helpers ─────────────────────────────────────────────────────────────────
+
+function setStep(n, state, detail, extraClass) {
+  const icon = document.getElementById(`step${n}-icon`);
+  const det  = document.getElementById(`step${n}-detail`);
+  icon.className = `step-icon ${state}`;
+  if (state === 'running') icon.textContent = '●';
+  else if (state === 'pass') icon.textContent = '✓';
+  else if (state === 'fail') icon.textContent = '✗';
+  else if (state === 'warn') icon.textContent = '!';
+  else icon.textContent = n;
+  if (detail !== undefined) {
+    det.textContent = detail;
+    det.className = 'step-detail' + (extraClass ? ' ' + extraClass : '');
+  }
+}
+
+function esc(s) {
+  if (!s && s !== 0) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); }
+  catch { return iso; }
+}
+
+// ── Main verification flow ─────────────────────────────────────────────────────
+
+async function runVerification(fileMap) {
+  // Show progress card, hide result
+  document.getElementById('steps-card').style.display = '';
+  document.getElementById('result-card').style.display = 'none';
+
+  // Reset all steps
+  for (let n = 1; n <= 5; n++) setStep(n, 'pending', 'Waiting…');
+  document.getElementById('file-results').style.display = 'none';
+  document.getElementById('file-results').innerHTML = '';
+
+  let manifest = null, artifactMeta = null, chain = null, timestamps = null;
+  let manifestBytes = null;
+
+  // ── STEP 1: Locate and parse artifact files ──────────────────────────────
+  setStep(1, 'running', 'Reading artifact files…');
+  try {
+    const mf = fileMap.get('manifest.json');
+    if (!mf) throw new Error('manifest.json not found in folder');
+    const mText = await readFileText(mf);
+    manifest = JSON.parse(mText);
+    manifestBytes = new TextEncoder().encode(mText);
+
+    const af = fileMap.get('artifact.json');
+    if (!af) throw new Error('artifact.json not found in folder');
+    artifactMeta = JSON.parse(await readFileText(af));
+
+    const cf = fileMap.get('chain.json');
+    if (!cf) throw new Error('chain.json not found in folder');
+    chain = JSON.parse(await readFileText(cf));
+
+    // timestamps.json is optional (files may not have been stamped)
+    const tf = fileMap.get('timestamps.json');
+    if (tf) timestamps = JSON.parse(await readFileText(tf));
+    else timestamps = [];
+
+    const fileCount = manifest.files ? manifest.files.length : 0;
+    setStep(1, 'pass', `Found ${fileCount} file(s) in manifest · chain has ${chain.length} entries · ${timestamps.length} timestamp record(s)`);
+  } catch (e) {
+    setStep(1, 'fail', e.message, 'err');
+    showVerdict('invalid', '⚠', 'Invalid', 'This does not appear to be a valid iArtifact folder. ' + e.message, null, null);
+    return;
+  }
+
+  // ── STEP 2: File integrity — SHA-384 ─────────────────────────────────────
+  setStep(2, 'running', 'Computing SHA-384 for each file…');
+  let fileOk = 0, fileBad = 0, fileMissing = 0, fileUnscanned = 0, fileExtra = 0;
+  const fileRows = [];
+
+  for (const entry of manifest.files || []) {
+    const relPath = entry.rel_path;
+    if (!entry.sha384) {
+      fileUnscanned++;
+      fileRows.push({ path: relPath, status: 'warn', label: '? unscanned', msg: 'No hash recorded — file was added but not scanned' });
+      continue;
+    }
+    const f = fileMap.get(relPath);
+    if (!f) {
+      fileMissing++;
+      fileRows.push({ path: relPath, status: 'bad', label: '✗ missing', msg: 'File not found in dropped folder' });
+      continue;
+    }
+    try {
+      const bytes = await readFileBytes(f);
+      const actual = await sha384hex(bytes);
+      if (actual === entry.sha384) {
+        fileOk++;
+        fileRows.push({ path: relPath, status: 'ok', label: '✓', msg: '' });
+      } else {
+        fileBad++;
+        fileRows.push({ path: relPath, status: 'bad', label: '✗ TAMPERED', msg: `Expected …${entry.sha384.slice(-12)}, got …${actual.slice(-12)}` });
+      }
+    } catch (e) {
+      fileMissing++;
+      fileRows.push({ path: relPath, status: 'bad', label: '✗ read error', msg: e.message });
+    }
+  }
+
+  // Check for extra files in folder not in manifest (informational only)
+  const knownPaths = new Set((manifest.files || []).map(f => f.rel_path));
+  const skipNames = new Set(['manifest.json','artifact.json','chain.json','lineage.json','timestamps.json','constitution.json','context.md','_rules.md','desktop.ini','Thumbs.db','.DS_Store','qrcode.min.js']);
+  for (const [relPath] of fileMap) {
+    if (!knownPaths.has(relPath) && !skipNames.has(relPath.split('/').pop()) &&
+        !relPath.endsWith('.tsr') && !relPath.startsWith('.') &&
+        !relPath.match(/^iArtifact-/) && !relPath.match(/^published\//)) {
+      fileExtra++;
+    }
+  }
+
+  // Render file list
+  const fileResultEl = document.getElementById('file-results');
+  if (fileRows.length > 0) {
+    fileResultEl.innerHTML = '<div class="file-list">' +
+      fileRows.map(r => `<div class="file-row ${r.status}">
+        <span class="f-status">${esc(r.label)}</span>
+        <span class="f-path" title="${esc(r.path)}">${esc(r.path)}</span>
+        ${r.msg ? `<span class="f-err">${esc(r.msg)}</span>` : ''}
+      </div>`).join('') + '</div>';
+    fileResultEl.style.display = '';
+  }
+
+  let step2State, step2Msg;
+  if (fileBad > 0 || fileMissing > 0) {
+    step2State = 'fail';
+    step2Msg = `${fileBad} tampered · ${fileMissing} missing · ${fileOk} OK`;
+  } else if (fileUnscanned > 0) {
+    step2State = 'warn';
+    step2Msg = `${fileOk} OK · ${fileUnscanned} unscanned (no hash recorded) · ${fileExtra > 0 ? fileExtra + ' extra file(s) not in manifest' : ''}`;
+  } else {
+    step2State = 'pass';
+    step2Msg = `All ${fileOk} file(s) verified ✓${fileExtra > 0 ? ` · ${fileExtra} extra file(s) not in manifest (informational)` : ''}`;
+  }
+  setStep(2, step2State, step2Msg);
+
+  // ── STEP 3: Provenance chain integrity ────────────────────────────────────
+  setStep(3, 'running', 'Verifying chain entry hashes…');
+  let chainOk = 0, chainBad = 0, chainBadDetail = '';
+  const genesisHash = '0'.repeat(96); // matches Rust: "0".repeat(96)
+
+  for (let i = 0; i < chain.length; i++) {
+    const e = chain[i];
+    const expectedPrev = i === 0 ? genesisHash : chain[i - 1].entry_hash;
+
+    // Verify prev_hash linkage
+    if (e.prev_hash !== expectedPrev) {
+      chainBad++;
+      chainBadDetail = `Entry ${i} (${esc(e.event)}): prev_hash mismatch`;
+      break;
+    }
+
+    // Recompute entry_hash
+    const computed = await computeChainEntryHash(e.prev_hash, e.event, e.data, e.timestamp);
+    if (computed !== e.entry_hash) {
+      chainBad++;
+      chainBadDetail = `Entry ${i} (${esc(e.event)}): hash mismatch — entry may be tampered`;
+      break;
+    }
+    chainOk++;
+  }
+
+  if (chainBad > 0) {
+    setStep(3, 'fail', chainBadDetail, 'err');
+  } else {
+    setStep(3, 'pass', `All ${chainOk} chain entries verified ✓`);
+  }
+
+  // ── STEP 4: Seal integrity — manifest hash in sealed chain event ──────────
+  setStep(4, 'running', 'Checking seal chain event…');
+  let sealPass = false, sealDetail = '', sealState = 'fail';
+
+  const sealEntry = chain.slice().reverse().find(e => e.event === 'sealed');
+  if (!sealEntry) {
+    sealState = 'warn';
+    sealDetail = 'No "sealed" event found in chain — this artifact has not been sealed';
+  } else {
+    const recordedManifestHash = sealEntry.data && sealEntry.data.manifest_sha384;
+    if (!recordedManifestHash) {
+      sealState = 'warn';
+      sealDetail = 'Sealed chain event found but no manifest_sha384 recorded';
+    } else {
+      // Compute SHA-384 of the manifest.json bytes we read
+      const actualManifestHash = await sha384hex(manifestBytes);
+      if (actualManifestHash === recordedManifestHash) {
+        sealPass = true;
+        sealState = 'pass';
+        sealDetail = `Manifest hash verified — sealed at ${fmtDate(sealEntry.data.sealed_at || '')}`;
+      } else {
+        sealState = 'fail';
+        sealDetail = `TAMPERED — manifest.json hash does not match sealed record. Recorded: …${recordedManifestHash.slice(-16)} · Actual: …${actualManifestHash.slice(-16)}`;
+      }
+    }
+  }
+  setStep(4, sealState, sealDetail, sealState === 'fail' ? 'err' : '');
+
+  // ── STEP 5: RFC 3161 timestamp status ─────────────────────────────────────
+  setStep(5, 'running', 'Checking timestamp tokens…');
+  let tsrOk = 0, tsrBad = 0, tsrMissing = 0;
+  const tsrDetails = [];
+
+  if (timestamps.length === 0) {
+    setStep(5, 'warn', 'No timestamp records found — timestamps are optional');
+  } else {
+    for (const rec of timestamps) {
+      const tsrPath = rec.tsr_path;
+      const tsrFile = fileMap.get(tsrPath);
+      if (!tsrFile) {
+        tsrMissing++;
+        tsrDetails.push(`⚠ ${rec.file}: TSR file not found (${tsrPath})`);
+        continue;
+      }
+      try {
+        const bytes = await readFileBytes(tsrFile);
+        if (tsrIsGranted(bytes)) {
+          tsrOk++;
+          tsrDetails.push(`✓ ${rec.file} — ${rec.tsa || 'TSA'} — ${fmtDate(rec.stamped_at)}`);
+        } else {
+          tsrBad++;
+          tsrDetails.push(`✗ ${rec.file}: TSR token status is not "granted"`);
+        }
+      } catch {
+        tsrMissing++;
+        tsrDetails.push(`⚠ ${rec.file}: could not read TSR file`);
+      }
+    }
+    const tsrState = tsrBad > 0 ? 'fail' : tsrMissing > 0 ? 'warn' : 'pass';
+    const tsrSummary = `${tsrOk} granted · ${tsrBad} invalid · ${tsrMissing} missing`;
+    setStep(5, tsrState, tsrSummary + '\n' + tsrDetails.join('\n'));
+  }
+
+  // ── VERDICT ──────────────────────────────────────────────────────────────
+  let verdict, icon, label, sub;
+  const hasTamper = (fileBad > 0 || fileMissing > 0 || chainBad > 0 || sealState === 'fail');
+  const hasWarn   = (fileUnscanned > 0 || sealState === 'warn');
+  const sealed    = artifactMeta && artifactMeta.sealed;
+
+  if (hasTamper) {
+    verdict = 'tampered';
+    icon    = '🚫';
+    label   = 'TAMPERED';
+    sub     = 'One or more cryptographic checks failed. This artifact\'s integrity cannot be confirmed. See the failed steps above.';
+  } else if (!sealed) {
+    verdict = 'incomplete';
+    icon    = '⚠';
+    label   = 'NOT SEALED';
+    sub     = 'File hashes and chain are intact, but this artifact has not been sealed. Sealing records the manifest hash in the chain, providing the strongest proof of finality.';
+  } else if (hasWarn) {
+    verdict = 'incomplete';
+    icon    = '⚠';
+    label   = 'INCOMPLETE';
+    sub     = 'Some files were not hashed at scan time and could not be verified. Chain and seal integrity passed. Re-scan all files in the iArtifact app to achieve full verification.';
+  } else {
+    verdict = 'verified';
+    icon    = '✅';
+    label   = 'VERIFIED';
+    sub     = 'All cryptographic checks passed. File hashes, chain integrity, and seal are all valid.';
+  }
+
+  showVerdict(verdict, icon, label, sub, artifactMeta, manifest);
+}
+
+function showVerdict(verdict, icon, label, sub, meta, manifest) {
+  document.getElementById('result-card').style.display = '';
+
+  // Verdict banner
+  document.getElementById('verdict-banner').innerHTML = `
+    <div class="verdict-banner ${verdict}">
+      <div class="verdict-icon-big">${icon}</div>
+      <div>
+        <div class="verdict-main">${esc(label)}</div>
+        <div class="verdict-sub">${esc(sub)}</div>
+      </div>
+    </div>`;
+
+  // Artifact info grid (if we have metadata)
+  let infoHtml = '';
+  if (meta) {
+    const sealedClass = meta.sealed ? 'sealed-yes' : 'sealed-no';
+    const sealedLabel = meta.sealed ? '■ Permanently sealed' : '○ Not sealed';
+    const sealedAt    = meta.sealed_at ? fmtDate(meta.sealed_at) : '—';
+    const fileCount   = manifest && manifest.files ? manifest.files.length : '—';
+    const built       = manifest && manifest.built ? fmtDate(manifest.built) : '—';
+
+    infoHtml = `
+      <hr class="divider">
+      <div class="card-title" style="margin-bottom:12px">Artifact Details</div>
+      <div class="info-grid">
+        <div class="info-label">iA-ID</div>
+        <div class="info-value mono">${esc(meta.ia_id || '—')}</div>
+        <div class="info-label">Status</div>
+        <div class="info-value ${sealedClass}">${sealedLabel}</div>
+        <div class="info-label">Sealed at</div>
+        <div class="info-value">${sealedAt}</div>
+        <div class="info-label">Type</div>
+        <div class="info-value">${esc(meta.artifact_type || '—')}</div>
+        <div class="info-label">Files in manifest</div>
+        <div class="info-value">${fileCount}</div>
+        <div class="info-label">Manifest built</div>
+        <div class="info-value">${built}</div>
+      </div>`;
+
+    // Show optional registry follow-up if we have an ia_id
+    if (meta.ia_id) {
+      const followup = document.getElementById('registry-followup-details');
+      followup.style.display = '';
+      document.getElementById('followup-ia-input').value = meta.ia_id;
+    }
+  }
+
+  document.getElementById('artifact-info').innerHTML = infoHtml;
+  document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetVerifier() {
+  document.getElementById('steps-card').style.display = 'none';
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('folder-input').value = '';
+  document.getElementById('registry-followup-details').style.display = 'none';
+  document.getElementById('followup-result').textContent = '';
+  document.getElementById('drop-zone').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Optional registry follow-up (user-triggered, after verification) ──────────
+async function registryFollowup() {
+  const input = document.getElementById('followup-ia-input').value.trim();
+  const resultEl = document.getElementById('followup-result');
+  if (!input) return;
+  resultEl.innerHTML = '<span class="pulse">Checking registry…</span>';
+  try {
+    const resp = await fetch(`${REGISTRY}/lookup?ia=${encodeURIComponent(input.toLowerCase())}`);
+    const data = await resp.json();
+    if (resp.status === 404 || !data.found) {
+      resultEl.textContent = '⚠ Not found in public registry — the creator may not have published this iA-ID publicly.';
+      resultEl.style.color = 'var(--amber)';
+    } else {
+      const regAt = data.registered_at ? fmtDate(data.registered_at) : '—';
+      resultEl.innerHTML = `<span style="color:var(--green)">✓ Registered</span>
+        — <strong style="color:var(--ink)">${esc(data.name)}</strong>
+        by ${esc(data.owner)}
+        · ${regAt}`;
+    }
+  } catch {
+    resultEl.textContent = 'Registry unreachable — check your connection.';
+    resultEl.style.color = 'var(--ink3)';
+  }
+}
+
+// ── Registry Lookup (Tool 2) ───────────────────────────────────────────────────
+async function registryLookup() {
   const input = document.getElementById('ia-input').value.trim();
-  const status = document.getElementById('status');
-  const result = document.getElementById('result');
-  const btn = document.getElementById('verify-btn');
+  const status = document.getElementById('reg-status');
+  const result = document.getElementById('reg-result');
+  const btn = document.querySelector('#registry-panel .verify-btn');
 
-  if (!input) { status.textContent = 'Enter an iA-ID to verify.'; return; }
-
-  // Basic format check — hex, 12–64 chars
+  if (!input) { status.textContent = 'Enter an iA-ID to look up.'; return; }
   if (!/^[0-9a-f]{12,64}$/i.test(input)) {
     status.textContent = 'iA-IDs are hex strings (0-9, a-f), 12–64 characters.';
     result.style.display = 'none';
@@ -370,51 +1084,39 @@ async function verify() {
   }
 
   btn.disabled = true;
-  status.innerHTML = '<span class="pulse">Checking registry…</span>';
+  status.innerHTML = '<span class="pulse">Querying registry…</span>';
   result.style.display = 'none';
 
   try {
     const resp = await fetch(`${REGISTRY}/lookup?ia=${encodeURIComponent(input.toLowerCase())}`);
     const data = await resp.json();
-
     if (resp.status === 404 || !data.found) {
-      showNotFound(input, result);
+      showRegNotFound(input, result);
     } else {
-      showFound(data, result);
+      showRegFound(data, result);
     }
     status.textContent = '';
-  } catch (err) {
+  } catch {
     status.textContent = 'Registry unreachable — check your connection and try again.';
   } finally {
     btn.disabled = false;
   }
 }
 
-function showFound(d, el) {
-  const sealed = d.sealed ? true : false;
-  const sealedLabel = sealed
-    ? '<span class="field-value sealed">■ Permanently sealed</span>'
+function showRegFound(d, el) {
+  const sealed = d.sealed;
+  const sealedHtml = sealed
+    ? '<span class="field-value sealed-val">■ Permanently sealed</span>'
     : '<span class="field-value not-found">○ Not sealed</span>';
-
   const chainBlock = d.chain_hash
-    ? `<div class="chain-hash">Chain hash (last entry):<span>${esc(d.chain_hash)}</span></div>`
-    : '';
-
+    ? `<div class="chain-hash">Chain hash (last entry):<span>${esc(d.chain_hash)}</span></div>` : '';
   const tsaBlock = d.tsa_cert_hash
-    ? `<div class="field-label">TSA cert hash</div><div class="field-value mono">${esc(d.tsa_cert_hash)}</div>`
-    : '';
-
+    ? `<div class="field-label">TSA cert hash</div><div class="field-value mono">${esc(d.tsa_cert_hash)}</div>` : '';
   const typeRow = d.artifact_type && d.artifact_type !== 'Unknown'
-    ? `<div class="field-label">Type</div><div class="field-value">${esc(d.artifact_type)}</div>`
-    : '';
-
+    ? `<div class="field-label">Type</div><div class="field-value">${esc(d.artifact_type)}</div>` : '';
   const certRow = d.cert_date
-    ? `<div class="field-label">Cert date</div><div class="field-value">${esc(d.cert_date)}</div>`
-    : '';
-
-  const regAt = d.registered_at
-    ? new Date(d.registered_at).toLocaleString(undefined, { dateStyle:'medium', timeStyle:'short' })
-    : '';
+    ? `<div class="field-label">Cert date</div><div class="field-value">${esc(d.cert_date)}</div>` : '';
+  const regAt = d.registered_at ? fmtDate(d.registered_at) : '';
 
   el.style.display = 'block';
   el.innerHTML = `
@@ -422,36 +1124,27 @@ function showFound(d, el) {
       <div class="verdict-icon">✅</div>
       <div class="verdict-text">
         <div class="verdict-label" style="color:var(--green)">Record found in public registry</div>
-        <div class="verdict-sub">This iA-ID is registered and verifiable.</div>
+        <div class="verdict-sub-reg">This iA-ID is registered and verifiable. For cryptographic verification, use the Verify Artifact tab.</div>
       </div>
     </div>
     <div class="field-grid">
       <div class="field-label">iA-ID</div>
       <div class="field-value mono">${esc(d.ia_id)}</div>
-
       <div class="field-label">Name</div>
       <div class="field-value">${esc(d.name)}</div>
-
       <div class="field-label">Owner</div>
       <div class="field-value">${esc(d.owner)}</div>
-
-      ${typeRow}
-      ${certRow}
-
+      ${typeRow}${certRow}
       <div class="field-label">Status</div>
-      ${sealedLabel}
-
+      ${sealedHtml}
       <div class="field-label">Registered</div>
       <div class="field-value">${esc(regAt)}</div>
-
       ${tsaBlock}
     </div>
-    ${chainBlock}
-  `;
-  el.style.display = 'block';
+    ${chainBlock}`;
 }
 
-function showNotFound(ia_id, el) {
+function showRegNotFound(ia_id, el) {
   el.innerHTML = `
     <div class="not-found-card">
       <div class="nf-icon">⚠️</div>
@@ -462,23 +1155,31 @@ function showNotFound(ia_id, el) {
         · The artifact was created but not yet registered<br>
         · The iA-ID was entered incorrectly<br>
         · The artifact was created offline without registry access<br><br>
-        The absence of a registry entry does not by itself prove a work is inauthentic —
+        The absence of a registry entry does not prove a work is inauthentic —
         it means the author has not published the record publicly.
-        Request the iArtifact certificate file directly from the creator for offline verification.
+        Request the artifact folder directly from the creator and use
+        <em>Verify Artifact</em> for cryptographic verification.
       </div>
-    </div>
-  `;
+    </div>`;
   el.style.display = 'block';
 }
 
-function esc(s) {
-  if (!s) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+// ── Init ───────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Auto-read ?ia= from URL on page load (QR codes land here)
+  const params = new URLSearchParams(window.location.search);
+  const ia = params.get('ia') || params.get('id') || '';
+  if (ia) {
+    switchTab('registry');
+    document.getElementById('ia-input').value = ia.trim();
+    registryLookup();
+  }
+
+  // Enter key on registry input
+  document.getElementById('ia-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') registryLookup();
+  });
+});
 </script>
 </body>
 </html>
