@@ -667,13 +667,11 @@ async function sha384hex(data) {
     .join('');
 }
 
-function readFileBytes(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload  = e => resolve(new Uint8Array(e.target.result));
-    reader.onerror = () => reject(new Error('File read failed: ' + file.name));
-    reader.readAsArrayBuffer(file);
-  });
+async function readFileBytes(file) {
+  // file.arrayBuffer() is more reliable than FileReader across browser contexts
+  // and works in both secure (HTTPS) and localhost environments.
+  const buf = await file.arrayBuffer();
+  return new Uint8Array(buf);
 }
 
 function readFileText(file) {
@@ -798,7 +796,7 @@ async function runVerification(fileMap) {
 
   // ── STEP 2: File integrity — SHA-384 ─────────────────────────────────────
   setStep(2, 'running', 'Computing SHA-384 for each file…');
-  let fileOk = 0, fileBad = 0, fileMissing = 0, fileUnscanned = 0, fileExtra = 0;
+  let fileOk = 0, fileBad = 0, fileMissing = 0, fileReadError = 0, fileUnscanned = 0, fileExtra = 0;
   const fileRows = [];
 
   for (const entry of manifest.files || []) {
@@ -825,7 +823,7 @@ async function runVerification(fileMap) {
         fileRows.push({ path: relPath, status: 'bad', label: '✗ TAMPERED', msg: `Expected …${entry.sha384.slice(-12)}, got …${actual.slice(-12)}` });
       }
     } catch (e) {
-      fileMissing++;
+      fileReadError++;
       fileRows.push({ path: relPath, status: 'bad', label: '✗ read error', msg: e.message });
     }
   }
@@ -854,9 +852,14 @@ async function runVerification(fileMap) {
   }
 
   let step2State, step2Msg;
-  if (fileBad > 0 || fileMissing > 0) {
+  if (fileBad > 0 || fileMissing > 0 || fileReadError > 0) {
     step2State = 'fail';
-    step2Msg = `${fileBad} tampered · ${fileMissing} missing · ${fileOk} OK`;
+    const s2parts = [];
+    if (fileBad > 0)       s2parts.push(`${fileBad} tampered`);
+    if (fileMissing > 0)   s2parts.push(`${fileMissing} missing`);
+    if (fileReadError > 0) s2parts.push(`${fileReadError} read error`);
+    s2parts.push(`${fileOk} OK`);
+    step2Msg = s2parts.join(' · ');
   } else if (fileUnscanned > 0) {
     step2State = 'warn';
     step2Msg = `${fileOk} OK · ${fileUnscanned} unscanned (no hash recorded) · ${fileExtra > 0 ? fileExtra + ' extra file(s) not in manifest' : ''}`;
@@ -869,7 +872,10 @@ async function runVerification(fileMap) {
   // ── STEP 3: Provenance chain integrity ────────────────────────────────────
   setStep(3, 'running', 'Verifying chain entry hashes…');
   let chainOk = 0, chainBad = 0, chainBadDetail = '';
-  const genesisHash = '0'.repeat(96); // matches Rust: "0".repeat(96)
+  // Genesis sentinel length matches the first entry's hash algorithm (64=SHA-256, 96=SHA-384).
+  // The hardcoded 96 was wrong for SHA-256-era chains where entry 0's prev_hash is 64 zeros.
+  const genesisLen  = chain.length > 0 ? chain[0].entry_hash.length : 96;
+  const genesisHash = '0'.repeat(genesisLen);
 
   for (let i = 0; i < chain.length; i++) {
     const e = chain[i];
@@ -1043,7 +1049,7 @@ async function runVerification(fileMap) {
 
   // ── VERDICT ──────────────────────────────────────────────────────────────
   let verdict, icon, label, sub;
-  const hasTamper = (fileBad > 0 || fileMissing > 0 || chainBad > 0 || sealState === 'fail');
+  const hasTamper = (fileBad > 0 || fileMissing > 0 || fileReadError > 0 || chainBad > 0 || sealState === 'fail');
   const hasWarn   = (fileUnscanned > 0 || sealState === 'warn');
   const sealed    = artifactMeta && artifactMeta.sealed;
 
