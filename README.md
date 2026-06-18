@@ -39,6 +39,7 @@ The current video sidecar is C2PA-structured JSON, not a signed CBOR-encoded C2P
 |---|---|---|
 | v1.0 | 2026-06-17 | Initial public release. File hash + chain + seal verification. TSR grant status check. Registry lookup tab. Commit eb9928b. |
 | v1.1 | 2026-06-18 | GAP 5: dual-algorithm chain support (SHA-256 + SHA-384 per entry, auto-detected). GAP 6: stamped-event handling (STAMPED verdict for RFC 3161 timestamped but not yet sealed). GAP 7: three-file seal coverage (manifest + artifact + lineage, each shown individually). |
+| v2.0.0 | 2026-06-18 | Synced with iArtifact v2.0.0. iA- prefix handling: ?id=iA-XXXX deep-links from app now resolve correctly. Registry input accepts paste with or without iA- prefix. Artifact info grid displays iA-XXXX format matching app display. Footer version bump. |
 
 ---
 
@@ -83,7 +84,7 @@ Five steps run locally in your browser — no server contact:
 
 MIT License — see [LICENSE](LICENSE) if present.
 
-Copyright © 2024–2026 Ground Zero Studios. All rights reserved.  
+Copyright © 2026 Ground Zero Studios. All rights reserved.  
 Author: Terry Whitaker, Hamilton, Ohio  
 U.S. Copyright Registration 1-15177775421 (Literary Work, filed 2026-06-04)  
 Built within the SDEA framework.
