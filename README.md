@@ -46,7 +46,7 @@ The current video sidecar is C2PA-structured JSON, not a signed CBOR-encoded C2P
 | v1.1 | 2026-06-18 | GAP 5: dual-algorithm chain support (SHA-256 + SHA-384 per entry, auto-detected). GAP 6: stamped-event handling (STAMPED verdict for RFC 3161 timestamped but not yet sealed). GAP 7: three-file seal coverage (manifest + artifact + lineage, each shown individually). |
 | v2.0.0 | 2026-06-18 | Synced with iArtifact v2.0.0. iA- prefix handling: ?id=iA-XXXX deep-links from app now resolve correctly. Registry input accepts paste with or without iA- prefix. Artifact info grid displays iA-XXXX format matching app display. Footer version bump. |
 | v2.0.1 | 2026-06-18 | Synced with iArtifact v2.0.1. Fixed create artifact button, carousel start button, CA key folder button. GitHub Gist public audit log. Registry token UX fix. |
-| v2.0.2 | 2026-06-18 | Synced with iArtifact v2.0.2. Owner key bypass for developer activation. Fixed Gumroad link (was 404). Keys confirmed to survive updates (stored in ~/.iartifact, not AppData). |
+| v2.0.2 | 2026-06-19 | Full frontend + Rust audit before commercial launch. 23 frontend fixes: cross-artifact state bleed (embeddedPaths, embedDone, selectedFile reset on open), verifier buttons now deep-link with iA-ID, innerHTML XMP escaping in file/publish tabs, carousel step 04 corrected to timestamps tab, EULA/Privacy dates consistent. 3 Rust fixes: open_url allowlist added Gumroad for update downloads, publish XMP/C2PA sidecars now read title+creator from constitution.json (were empty), OGG/Opus publish now writes C2PA sidecar. Both installers signed and checksums updated. |
 
 ---
 
