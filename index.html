@@ -500,6 +500,7 @@ footer a:hover { color: var(--gold); }
   <!-- Final verdict — hidden until complete -->
   <div class="card" id="result-card" style="display:none">
     <div id="verdict-banner"></div>
+    <div id="verdict-action-bar" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"></div>
     <div id="artifact-info"></div>
     <!-- Optional registry follow-up — only shown after verification, user must click -->
     <details id="registry-followup-details" style="display:none">
@@ -568,9 +569,10 @@ footer a:hover { color: var(--gold); }
 </section>
 
 <footer>
-  <strong style="color:var(--gold)">Built by Ground Zero Studios</strong> &nbsp;·&nbsp; MIT licensed &nbsp;·&nbsp; v2.0.2<br>
+  <strong style="color:var(--gold)">Built by Ground Zero Studios</strong> &nbsp;·&nbsp; MIT licensed &nbsp;·&nbsp; v2.1.0<br>
   <span style="font-size:11px;opacity:0.6">RFC 3161 status · SHA-384 · eIDAS Art. 41 · EU AI Act Art. 50</span><br>
-  <span style="font-size:11px;opacity:0.6">© 2026 Terry Whitaker · U.S. Copyright Reg. 1-15177775421</span>
+  <span style="font-size:11px;opacity:0.6">© 2026 Terry Whitaker · U.S. Copyright Reg. 1-15177775421</span><br>
+  <span style="font-size:12px;margin-top:6px;display:inline-block">Want to create sealed artifacts? &rarr; <a href="https://groundzerostudios.com/iartifact" target="_blank" rel="noopener" style="color:var(--gold);font-weight:600">Get iArtifact</a></span>
 </footer>
 
 <script>
@@ -599,7 +601,11 @@ footer a:hover { color: var(--gold); }
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Registry base URL ─────────────────────────────────────────────────────────
-const REGISTRY = 'https://iartifact-registry.iartifact.workers.dev';
+// V-1: allow ?registry= URL param to override for staging/self-hosted registries
+const REGISTRY = (() => {
+  const p = new URLSearchParams(window.location.search).get('registry');
+  return (p && /^https?:\/\//.test(p)) ? p.replace(/\/$/, '') : 'https://iartifact-registry.iartifact.workers.dev';
+})();
 
 // ── Tab switching ──────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -665,6 +671,12 @@ async function collectDirectoryFiles(dirEntry, prefix, fileMap) {
   for (const entry of allEntries) {
     const path = prefix ? prefix + '/' + entry.name : entry.name;
     if (entry.isFile) {
+      // V-2: guard against runaway recursive drops (e.g. user drops entire Documents folder)
+      if (fileMap.size >= 200) {
+        alert('More than 200 files found in the dropped folder.\n\nThis is likely not an iArtifact folder — it should contain only a handful of files. Use "Choose Folder" to select the specific artifact folder.');
+        fileMap.clear();
+        return;
+      }
       const f = await fileFromEntry(entry);
       if (f) fileMap.set(path, f);
     } else if (entry.isDirectory) {
@@ -737,6 +749,35 @@ function tsrIsGranted(bytes) {
   return status === 0 || status === 1;
 }
 
+// V-6: extract issuer CN from TSR DER by scanning for UTF8String/PrintableString tags
+// after an OID matching commonName (2.5.4.3 = 55 04 03). Best-effort — returns null on failure.
+function tsrIssuerCN(bytes) {
+  try {
+    // OID bytes for id-at-commonName (2.5.4.3)
+    const CN_OID = [0x55, 0x04, 0x03];
+    for (let i = 0; i < bytes.length - CN_OID.length - 4; i++) {
+      if (bytes[i] === 0x06 && bytes[i + 1] === CN_OID.length &&
+          CN_OID.every((b, j) => bytes[i + 2 + j] === b)) {
+        // Found CN OID — value follows: skip OID TLV, then read next TLV
+        let off = i + 2 + CN_OID.length;
+        const tag = bytes[off]; off++;
+        // Accept UTF8String (0x0c), PrintableString (0x13), IA5String (0x16), BMPString (0x1e)
+        if (tag !== 0x0c && tag !== 0x13 && tag !== 0x16 && tag !== 0x1e) continue;
+        let len = bytes[off]; off++;
+        if (len & 0x80) {
+          const nb = len & 0x7f;
+          len = 0;
+          for (let k = 0; k < nb; k++) { len = (len << 8) | bytes[off++]; }
+        }
+        if (off + len > bytes.length) continue;
+        const slice = bytes.slice(off, off + len);
+        return new TextDecoder('utf-8').decode(slice);
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
 // ── UI helpers ─────────────────────────────────────────────────────────────────
 
 function setStep(n, state, detail, extraClass) {
@@ -771,7 +812,57 @@ function fmtDate(iso) {
 
 // ── Main verification flow ─────────────────────────────────────────────────────
 
+// ── iGame genesis certificate — ECDSA P-256 signature verification ──────────────
+function b64ToBytes(b64) {
+  const bin = atob((b64 || '').replace(/\s+/g, ''));
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+async function verifyGenesisCert(html) {
+  document.getElementById('steps-card').style.display = 'none';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const m = n => { const el = doc.querySelector('meta[name="' + n + '"]'); return el ? el.getAttribute('content') : ''; };
+  const iaId = m('ia-id'), world = m('ia-world'), hash = m('ia-content-hash'),
+        ts = m('ia-timestamp'), source = m('ia-source'), training = m('ia-training'),
+        sigB64 = m('ia-signature'), pubB64 = m('ia-pubkey'), state = m('ia-state');
+  if (!sigB64 || !pubB64 || !hash) {
+    showVerdict('invalid', '⚠', 'Not a verifiable genesis certificate',
+      'Missing signature, public key, or content hash.');
+    return;
+  }
+  // Reconstruct the EXACT payload the signer signed (Rust: ia_id\nworld\nhash\nts\nsource\ntraining).
+  const payload = [iaId, world, hash, ts, source, training].join('\n');
+  try {
+    const key = await crypto.subtle.importKey('spki', b64ToBytes(pubB64),
+      { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+    const ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key,
+      b64ToBytes(sigB64), new TextEncoder().encode(payload));
+    if (ok) {
+      showVerdict('verified', '✔', 'Genesis certificate verified',
+        'ECDSA P-256 signature valid against the published key · ' + world +
+        ' · State ' + (state || '1') + ' · ' + ts +
+        '. Signed assertions — source: ' + source + '; training: ' + training + '.');
+    } else {
+      showVerdict('tampered', '✘', 'Signature does NOT verify',
+        'The signature does not match the public key over the certificate contents — the certificate was altered or is not authentic.');
+    }
+  } catch (e) {
+    showVerdict('invalid', '⚠', 'Could not verify',
+      'Public key or signature is malformed: ' + e.message);
+  }
+}
+
 async function runVerification(fileMap) {
+  // iGame genesis certificate: a single HTML cert verifies by ECDSA P-256 signature.
+  if (fileMap.size === 1) {
+    const only = [...fileMap.values()][0];
+    if (only && /\.html?$/i.test(only.name)) {
+      const html = await readFileText(only);
+      if (/content="genesis-certificate"/.test(html)) return verifyGenesisCert(html);
+    }
+  }
   // Show progress card, hide result
   document.getElementById('steps-card').style.display = '';
   document.getElementById('result-card').style.display = 'none';
@@ -913,8 +1004,11 @@ async function runVerification(fileMap) {
       break;
     }
 
-    // Auto-detect hash algorithm from entry_hash length: 64 = SHA-256, 96 = SHA-384
-    const algo = e.entry_hash.length === 64 ? 'SHA-256' : 'SHA-384';
+    // V-3: prefer manifest.algo field; fall back to hash-length detection
+    const manifestAlgo = manifest && manifest.algo
+      ? (manifest.algo.toUpperCase().includes('256') ? 'SHA-256' : 'SHA-384')
+      : null;
+    const algo = manifestAlgo || (e.entry_hash.length === 64 ? 'SHA-256' : 'SHA-384');
     const computed = await computeChainEntryHash(e.prev_hash, e.event, e.data, e.timestamp, algo);
     if (computed !== e.entry_hash) {
       chainBad++;
@@ -1057,7 +1151,9 @@ async function runVerification(fileMap) {
         const bytes = await readFileBytes(tsrFile);
         if (tsrIsGranted(bytes)) {
           tsrOk++;
-          tsrDetails.push(`✓ ${rec.file} — ${rec.tsa || 'TSA'} — ${fmtDate(rec.stamped_at)}`);
+          const cn = tsrIssuerCN(bytes);
+          const issuer = cn ? cn : (rec.tsa || 'TSA');
+          tsrDetails.push(`✓ ${rec.file} — ${issuer} — ${fmtDate(rec.stamped_at)}`);
         } else {
           tsrBad++;
           tsrDetails.push(`✗ ${rec.file}: TSR token status is not "granted"`);
@@ -1148,6 +1244,21 @@ function showVerdict(verdict, icon, label, sub, meta, manifest) {
         <div class="info-value">${built}</div>
       </div>`;
 
+    // K-1: warn when sealed_at is more than 2 years ago — CA cert may have expired
+    if (meta.sealed_at) {
+      const age = Date.now() - new Date(meta.sealed_at).getTime();
+      const twoYears = 2 * 365.25 * 24 * 3600 * 1000;
+      if (age > twoYears) {
+        infoHtml += `<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--amber);border-radius:6px;font-size:11px;color:var(--ink3);line-height:1.6">
+          <strong style="color:var(--amber)">Note — CA certificate age</strong><br>
+          This artifact was sealed ${Math.floor(age / (365.25*24*3600*1000))} years ago.
+          The certificate authority that issued the signing certificate may have rotated or expired since then.
+          The cryptographic hashes remain valid indefinitely, but a CA-level validation tool may flag the cert chain.
+          Contact the issuer or use a time-of-signing validation policy for authoritative cert chain verification.
+        </div>`;
+      }
+    }
+
     // Show optional registry follow-up if we have an ia_id
     if (meta.ia_id) {
       const followup = document.getElementById('registry-followup-details');
@@ -1157,6 +1268,46 @@ function showVerdict(verdict, icon, label, sub, meta, manifest) {
   }
 
   document.getElementById('artifact-info').innerHTML = infoHtml;
+
+  // V-4: prominent "Check Registry" button directly in verdict card (only when we have ia_id)
+  // V-5: "Copy verification summary" button
+  const actionBar = document.getElementById('verdict-action-bar');
+  if (actionBar) {
+    actionBar.innerHTML = '';
+    if (meta && meta.ia_id) {
+      const regBtn = document.createElement('button');
+      regBtn.className = 'verify-btn';
+      regBtn.style.cssText = 'font-size:12px;padding:7px 16px';
+      regBtn.textContent = 'Check Registry';
+      regBtn.onclick = () => {
+        document.getElementById('followup-ia-input').value = meta.ia_id;
+        document.getElementById('registry-followup-details').open = true;
+        document.getElementById('registry-followup-details').style.display = '';
+        registryFollowup();
+        document.getElementById('registry-followup-details').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      actionBar.appendChild(regBtn);
+    }
+    const copyBtn = document.createElement('button');
+    copyBtn.style.cssText = 'background:none;border:1px solid var(--border);border-radius:6px;color:var(--ink3);cursor:pointer;font-family:inherit;font-size:11px;padding:7px 16px';
+    copyBtn.textContent = 'Copy summary';
+    copyBtn.onclick = () => {
+      const summary = {
+        ia_id:            meta ? ('iA-' + meta.ia_id) : null,
+        name:             meta ? (meta.name || null) : null,
+        owner:            meta ? (meta.owner || null) : null,
+        verdict:          verdict,
+        verified_at:      new Date().toISOString(),
+        verifier_version: '1.0'
+      };
+      navigator.clipboard.writeText(JSON.stringify(summary, null, 2)).then(() => {
+        copyBtn.textContent = 'Copied ✓';
+        setTimeout(() => { copyBtn.textContent = 'Copy summary'; }, 2000);
+      }).catch(() => { copyBtn.textContent = 'Copy failed'; setTimeout(() => { copyBtn.textContent = 'Copy summary'; }, 2000); });
+    };
+    actionBar.appendChild(copyBtn);
+  }
+
   document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
